@@ -189,7 +189,7 @@ export const aromaFamilies: AromaFamilyDefinition[] = [
   }
 ]
 
-import { normalizeIngredientName } from './engine/ingredients'
+import { normalizeIngredientName } from './ingredients'
 
 export function findAroma(query: string): AromaMatch[] {
   const normalized = normalizeIngredientName(query)
