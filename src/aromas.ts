@@ -282,6 +282,7 @@ export function compareAromaProfiles(
   }
 }
 
+
 export function identifyIngredientAromas(
   aromas: string[]
 ): AromaMatch[] {
@@ -305,24 +306,4 @@ export function identifyIngredientAromas(
   }
 
   return Array.from(unique.values())
-}
-
-export function identifyIngredientAromas(
-
-  for (const aroma of aromas) {
-    const matches = findAroma(aroma)
-
-    if (matches.length > 0) {
-      results.push(...matches)
-      continue
-    }
-
-    results.push(...searchAromas(aroma))
-  }
-
-  const unique = new Map<string, AromaMatch>()
-
-  for (const match of results) {
-    unique.set(match.descriptor.id, match)
-  }  return Array.from(unique.values())
 }
