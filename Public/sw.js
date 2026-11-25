@@ -1,5 +1,5 @@
 
-const CACHE = 'mixology-lab-v2-pwa-2';
+const CACHE = 'mixology-lab-v2-pwa-3';
 
 const ASSETS = [
   '/',
@@ -40,9 +40,7 @@ self.addEventListener('fetch', event => {
 
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request)
-        .then(response => response)
-        .catch(() => caches.match('/index.html'))
+      fetch(request).catch(() => caches.match('/index.html'))
     );
     return;
   }
