@@ -327,4 +327,5 @@ export function identifyIngredientAromas(
 
   for (const match of results) {
     unique.set(match.descriptor.id, match)
-  }
+  }  return Array.from(unique.values())
+}
