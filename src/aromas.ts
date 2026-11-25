@@ -175,7 +175,7 @@ export const aromaFamilies: AromaFamilyDefinition[] = [
   {
     id: 'fermentes',
     name: 'Fermentés et lactiques',
-    description: 'Notes issues de fermentations, d'acidité lactique et de maturations.',
+    description: "Notes issues de fermentations, d'acidité lactique et de maturations.",
     descriptors: [
       { id: 'yaourt', name: 'Yaourt', synonyms: ['lactique', 'lait fermenté'], intensity: 3, tags: ['lacte', 'acidule', 'cremeux'] },
       { id: 'kefir', name: 'Kéfir', synonyms: ['kéfir de fruits', 'kéfir de lait'], intensity: 4, tags: ['fermente', 'acidule', 'frais'] },
