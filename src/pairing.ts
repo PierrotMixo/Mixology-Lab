@@ -2,7 +2,7 @@
 import {
   findIngredient,
   type Ingredient,
-} from './ingredients'
+} from './engine/ingredients'
 
 export type PairingType =
   | 'complementarity'
