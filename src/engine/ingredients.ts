@@ -552,4 +552,216 @@ export const ingredients: Ingredient[] = [
     subfamily: 'Sirop neutre',
     roles: ['sucrant'],
     aromas: ['neutre'],
-    taste: { acidi
+    taste: { acidity: 0, sweetness: 5, bitterness: 0, body: 2, intensity: 1 },
+    pairingTags: ['agrumes', 'fruits', 'herbes', 'spiritueux'],
+    notes: 'Préciser le ratio sucre/eau pour calculer correctement le pouvoir sucrant.'
+  },
+  {
+    id: 'honey-syrup',
+    name: 'Sirop de miel',
+    aliases: ['Miel dilué'],
+    family: 'sucres_et_sirops',
+    subfamily: 'Sirop aromatique',
+    roles: ['sucrant', 'modificateur'],
+    aromas: ['miel', 'floral', 'cire'],
+    taste: { acidity: 0, sweetness: 5, bitterness: 0, body: 3, intensity: 3 },
+    pairingTags: ['gin', 'citron', 'whisky', 'thym', 'gingembre'],
+    notes: 'Le type de miel et le ratio de dilution changent le résultat.'
+  },
+  {
+    id: 'agave-syrup',
+    name: 'Sirop d’agave',
+    aliases: ['Nectar d’agave'],
+    family: 'sucres_et_sirops',
+    subfamily: 'Sirop végétal',
+    roles: ['sucrant'],
+    aromas: ['agave', 'végétal', 'neutre'],
+    taste: { acidity: 0, sweetness: 5, bitterness: 0, body: 2, intensity: 2 },
+    pairingTags: ['tequila', 'mezcal', 'citron vert', 'pamplemousse'],
+    notes: 'Pouvoir sucrant et viscosité à comparer avec le sirop simple.'
+  },
+  {
+    id: 'maple-syrup',
+    name: 'Sirop d’érable',
+    aliases: ['Maple syrup'],
+    family: 'sucres_et_sirops',
+    subfamily: 'Sirop végétal',
+    roles: ['sucrant', 'modificateur'],
+    aromas: ['érable', 'boisé', 'caramel'],
+    taste: { acidity: 0, sweetness: 5, bitterness: 0, body: 3, intensity: 3 },
+    pairingTags: ['whisky', 'rhum', 'pomme', 'noix', 'café'],
+    notes: 'Apporte une signature aromatique et une douceur marquée.'
+  },
+
+  // PRÉPARATIONS
+  {
+    id: 'grenadine',
+    name: 'Sirop de grenadine',
+    aliases: ['Grenadine'],
+    family: 'sucres_et_sirops',
+    subfamily: 'Sirop fruité',
+    roles: ['sucrant', 'aromatique'],
+    aromas: ['fruits rouges', 'grenade'],
+    taste: { acidity: 1, sweetness: 5, bitterness: 0, body: 2, intensity: 2 },
+    pairingTags: ['gin', 'rhum', 'citron', 'orange', 'ananas'],
+    notes: 'La composition varie fortement selon les fabricants.'
+  },
+  {
+    id: 'orgeat',
+    name: 'Sirop d’orgeat',
+    aliases: ['Orgeat', 'Sirop d’amande'],
+    family: 'sucres_et_sirops',
+    subfamily: 'Sirop de fruits à coque',
+    roles: ['sucrant', 'texture'],
+    aromas: ['amande', 'fleur d’oranger'],
+    taste: { acidity: 0, sweetness: 5, bitterness: 0, body: 4, intensity: 3 },
+    pairingTags: ['rhum', 'citron vert', 'cognac', 'fleur d’oranger'],
+    notes: 'Vérifier les allergènes et la composition de chaque référence.'
+  },
+  {
+    id: 'apple-shrub',
+    name: 'Shrub de pomme',
+    aliases: ['Vinaigre de pomme aromatisé'],
+    family: 'préparations',
+    subfamily: 'Shrub',
+    roles: ['acidité', 'modificateur'],
+    aromas: ['pomme', 'vinaigre', 'fruité'],
+    taste: { acidity: 4, sweetness: 2, bitterness: 0, body: 2, intensity: 3 },
+    pairingTags: ['gin', 'romarin', 'pomme', 'gingembre', 'eau gazeuse'],
+    notes: 'La recette et la concentration en vinaigre doivent être documentées.'
+  },
+  {
+    id: 'verjus',
+    name: 'Verjus',
+    aliases: ['Jus de raisin vert'],
+    family: 'préparations',
+    subfamily: 'Jus acide',
+    roles: ['acidité'],
+    aromas: ['raisin', 'végétal', 'fruit blanc'],
+    taste: { acidity: 3, sweetness: 1, bitterness: 0, body: 2, intensity: 2 },
+    pairingTags: ['gin', 'vin blanc', 'pomme', 'poire', 'herbes'],
+    notes: 'Alternative acidulée au citron, avec un profil différent.'
+  },
+  {
+    id: 'grenadine-juice',
+    name: 'Jus de grenade',
+    aliases: ['Grenade fraîche'],
+    family: 'fruits',
+    subfamily: 'Fruit rouge',
+    roles: ['acidité', 'aromatique'],
+    aromas: ['grenade', 'fruits rouges', 'végétal'],
+    taste: { acidity: 3, sweetness: 2, bitterness: 1, body: 2, intensity: 3 },
+    pairingTags: ['gin', 'rhum', 'orange', 'rose', 'épices'],
+    notes: 'À distinguer du sirop de grenadine.'
+  },
+
+  // BOISSONS SANS ALCOOL
+  {
+    id: 'tonic',
+    name: 'Eau tonique',
+    aliases: ['Tonic water'],
+    family: 'boissons_sans_alcool',
+    subfamily: 'Boisson gazeuse amère',
+    roles: ['allonge', 'amer'],
+    aromas: ['quinine', 'agrumes'],
+    taste: { acidity: 2, sweetness: 3, bitterness: 3, body: 2, intensity: 2 },
+    pairingTags: ['gin', 'agrumes', 'concombre', 'herbes'],
+    notes: 'Le sucre et l’amertume varient selon les marques.'
+  },
+  {
+    id: 'soda-water',
+    name: 'Eau gazeuse',
+    aliases: ['Soda water', 'Eau pétillante'],
+    family: 'boissons_sans_alcool',
+    subfamily: 'Eau gazeuse',
+    roles: ['allonge'],
+    aromas: ['neutre'],
+    taste: { acidity: 0, sweetness: 0, bitterness: 0, body: 1, intensity: 1 },
+    pairingTags: ['agrumes', 'sirop', 'vermouth', 'herbes'],
+    notes: 'Apporte dilution et effervescence sans ajouter de sucre.'
+  },
+  {
+    id: 'ginger-beer',
+    name: 'Ginger beer',
+    aliases: ['Bière de gingembre sans alcool'],
+    family: 'boissons_sans_alcool',
+    subfamily: 'Boisson gazeuse épicée',
+    roles: ['allonge', 'aromatique'],
+    aromas: ['gingembre', 'épicé', 'citron'],
+    taste: { acidity: 2, sweetness: 4, bitterness: 0, body: 2, intensity: 4 },
+    pairingTags: ['rhum', 'vodka', 'citron vert', 'whisky'],
+    notes: 'À distinguer du ginger ale, généralement moins intense.'
+  },
+  {
+    id: 'cranberry-juice',
+    name: 'Jus de cranberry',
+    aliases: ['Jus de canneberge'],
+    family: 'boissons_sans_alcool',
+    subfamily: 'Jus de fruits',
+    roles: ['allonge', 'acidité'],
+    aromas: ['canneberge', 'fruits rouges'],
+    taste: { acidity: 4, sweetness: 2, bitterness: 1, body: 2, intensity: 3 },
+    pairingTags: ['vodka', 'gin', 'orange', 'citron vert'],
+    notes: 'Les produits du commerce peuvent être purs, sucrés ou dilués.'
+  },
+  {
+    id: 'green-tea',
+    name: 'Thé vert',
+    aliases: ['Infusion de thé vert'],
+    family: 'boissons_sans_alcool',
+    subfamily: 'Infusion',
+    roles: ['allonge', 'aromatique'],
+    aromas: ['végétal', 'herbe', 'umami'],
+    taste: { acidity: 0, sweetness: 0, bitterness: 2, body: 2, intensity: 3 },
+    pairingTags: ['gin', 'citron', 'yuzu', 'jasmin', 'gingembre'],
+    notes: 'Temps et température d’infusion influencent l’amertume.'
+  },
+  {
+    id: 'coffee',
+    name: 'Café',
+    aliases: ['Espresso', 'Café froid'],
+    family: 'boissons_sans_alcool',
+    subfamily: 'Boisson torréfiée',
+    roles: ['aromatique', 'modificateur'],
+    aromas: ['torréfié', 'cacao', 'grillé'],
+    taste: { acidity: 2, sweetness: 0, bitterness: 4, body: 3, intensity: 5 },
+    pairingTags: ['vodka', 'rhum', 'whisky', 'vanille', 'chocolat'],
+    notes: 'L’extraction et la variété influencent acidité et amertume.'
+  }
+]
+
+export function normalizeIngredientName(value: string): string {
+  return value
+    .trim()
+    .toLocaleLowerCase('fr')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+}
+
+export function findIngredient(query: string): Ingredient | undefined {
+  const normalized = normalizeIngredientName(query)
+
+  return ingredients.find(item =>
+    normalizeIngredientName(item.name) === normalized ||
+    item.aliases.some(alias =>
+      normalizeIngredientName(alias) === normalized
+    )
+  )
+}
+
+export function searchIngredients(query: string): Ingredient[] {
+  const normalized = normalizeIngredientName(query)
+
+  if (!normalized) return ingredients
+
+  return ingredients.filter(item =>
+    normalizeIngredientName(item.name).includes(normalized) ||
+    item.aliases.some(alias =>
+      normalizeIngredientName(alias).includes(normalized)
+    ) ||
+    item.aromas.some(aroma =>
+      normalizeIngredientName(aroma).includes(normalized)
+    )
+  )
+}
+
