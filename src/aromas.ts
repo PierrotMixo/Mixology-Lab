@@ -308,9 +308,6 @@ export function identifyIngredientAromas(
 }
 
 export function identifyIngredientAromas(
-  aromas: string[]
-): AromaMatch[] {
-  const results: AromaMatch[] = []
 
   for (const aroma of aromas) {
     const matches = findAroma(aroma)
