@@ -1,0 +1,13 @@
+{
+  "name": "MIXOLOGY LAB — Personal Edition V2",
+  "short_name": "Mixology Lab",
+  "description": "Assistant personnel de mixologie avec inventaire de bar.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#111714",
+  "theme_color": "#111714",
+  "lang": "fr",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
