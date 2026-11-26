@@ -17,39 +17,62 @@ export type BalanceAnalysis = {
   suggestions: string[]
 }
 
-const clamp = (value: number, min = 0, max = 5) =>
-  Math.max(min, Math.min(max, value))
+const clamp = (value: number, min = 0, max = 5): number => {
+  if (!Number.isFinite(value)) return min
+  return Math.max(min, Math.min(max, value))
+}
 
+const emptyProfile = (): BalanceProfile => ({
+  acidity: 0,
+  sweetness: 0,
+  bitterness: 0,
+  body: 0,
+  intensity: 0,
+})
+
+/**
+ * Calcule le profil sensoriel moyen des ingrédients.
+ * Les quantités sont facultatives : sans elles, chaque ingrédient
+ * possède le même poids dans le calcul.
+ */
 export function calculateBalanceProfile(
-  ingredients: Ingredient[]
+  ingredients: Ingredient[],
+  ingredientWeights?: number[]
 ): BalanceProfile {
-  if (ingredients.length === 0) {
-    return {
-      acidity: 0,
-      sweetness: 0,
-      bitterness: 0,
-      body: 0,
-      intensity: 0,
-    }
+  if (ingredients.length === 0) return emptyProfile()
+
+  const weights = ingredients.map((_, index) => {
+    const weight = ingredientWeights?.[index] ?? 1
+    return Number.isFinite(weight) && weight > 0 ? weight : 0
+  })
+
+  const totalWeight = weights.reduce((sum, weight) => sum + weight, 0)
+
+  if (totalWeight === 0) return emptyProfile()
+
+  const average = (key: keyof Ingredient['taste']): number => {
+    const weightedTotal = ingredients.reduce(
+      (sum, ingredient, index) =>
+        sum + clamp(ingredient.taste[key]) * weights[index],
+      0
+    )
+
+    return clamp(weightedTotal / totalWeight)
   }
 
-  const total = ingredients.length
-
-  const average = (key: keyof Ingredient['taste']) =>
-    ingredients.reduce(
-      (sum, ingredient) => sum + ingredient.taste[key],
-      0
-    ) / total
-
   return {
-    acidity: clamp(average('acidity')),
-    sweetness: clamp(average('sweetness')),
-    bitterness: clamp(average('bitterness')),
-    body: clamp(average('body')),
-    intensity: clamp(average('intensity')),
+    acidity: average('acidity'),
+    sweetness: average('sweetness'),
+    bitterness: average('bitterness'),
+    body: average('body'),
+    intensity: average('intensity'),
   }
 }
 
+/**
+ * Évalue la proximité du profil avec un équilibre sensoriel général.
+ * Le score est indicatif et ne remplace pas une dégustation.
+ */
 export function calculateBalanceScore(
   profile: BalanceProfile
 ): number {
@@ -72,7 +95,10 @@ export function calculateBalanceScore(
   const keys = Object.keys(target) as (keyof BalanceProfile)[]
 
   const penalty = keys.reduce((total, key) => {
-    const difference = Math.abs(profile[key] - target[key])
+    const difference = Math.abs(
+      clamp(profile[key]) - target[key]
+    )
+
     return total + (difference / 5) * weights[key]
   }, 0)
 
@@ -85,41 +111,47 @@ export function analyzeBalance(
   const strengths: string[] = []
   const weaknesses: string[] = []
 
-  if (profile.acidity >= 3 && profile.acidity <= 4) {
+  const acidity = clamp(profile.acidity)
+  const sweetness = clamp(profile.sweetness)
+  const bitterness = clamp(profile.bitterness)
+  const body = clamp(profile.body)
+  const intensity = clamp(profile.intensity)
+
+  if (acidity >= 3 && acidity <= 4) {
     strengths.push('Belle présence acidulée')
-  } else if (profile.acidity > 4) {
+  } else if (acidity > 4) {
     weaknesses.push('Acidité potentiellement trop dominante')
-  } else if (profile.acidity < 1.5) {
+  } else if (acidity < 1.5) {
     weaknesses.push('Manque de fraîcheur et de tension')
   }
 
-  if (profile.sweetness >= 2 && profile.sweetness <= 3.5) {
+  if (sweetness >= 2 && sweetness <= 3.5) {
     strengths.push('Sucre relativement bien dosé')
-  } else if (profile.sweetness > 3.5) {
+  } else if (sweetness > 3.5) {
     weaknesses.push('Risque de sucrosité excessive')
-  } else if (profile.sweetness < 1) {
+  } else if (sweetness < 1) {
     weaknesses.push('Faible rondeur sucrée')
   }
 
-  if (profile.bitterness >= 1 && profile.bitterness <= 2.5) {
+  if (bitterness >= 1 && bitterness <= 2.5) {
     strengths.push('Amertume structurante')
-  } else if (profile.bitterness > 3.5) {
+  } else if (bitterness > 3.5) {
     weaknesses.push('Amertume potentiellement trop marquée')
   }
 
-  if (profile.body >= 2 && profile.body <= 4) {
+  if (body >= 2 && body <= 4) {
     strengths.push('Corps et texture équilibrés')
-  } else if (profile.body < 1.5) {
+  } else if (body < 1.5) {
     weaknesses.push('Manque de matière en bouche')
-  } else if (profile.body > 4) {
+  } else if (body > 4) {
     weaknesses.push('Texture potentiellement trop lourde')
   }
 
-  if (profile.intensity >= 2.5 && profile.intensity <= 4) {
+  if (intensity >= 2.5 && intensity <= 4) {
     strengths.push('Intensité aromatique intéressante')
-  } else if (profile.intensity < 1.5) {
+  } else if (intensity < 1.5) {
     weaknesses.push('Intensité aromatique trop discrète')
-  } else if (profile.intensity > 4.5) {
+  } else if (intensity > 4.5) {
     weaknesses.push('Intensité aromatique potentiellement excessive')
   }
 
@@ -131,51 +163,57 @@ export function generateBalanceSuggestions(
 ): string[] {
   const suggestions: string[] = []
 
-  if (profile.acidity > 4) {
+  const acidity = clamp(profile.acidity)
+  const sweetness = clamp(profile.sweetness)
+  const bitterness = clamp(profile.bitterness)
+  const body = clamp(profile.body)
+  const intensity = clamp(profile.intensity)
+
+  if (acidity > 4) {
     suggestions.push(
       'Réduire légèrement les ingrédients acides ou augmenter la rondeur sucrée.'
     )
-  } else if (profile.acidity < 1.5) {
+  } else if (acidity < 1.5) {
     suggestions.push(
       'Ajouter une touche d’agrume ou de verjus pour apporter de la tension.'
     )
   }
 
-  if (profile.sweetness > 3.5) {
+  if (sweetness > 3.5) {
     suggestions.push(
       'Réduire le sirop ou choisir un modificateur moins sucré.'
     )
-  } else if (profile.sweetness < 1) {
+  } else if (sweetness < 1) {
     suggestions.push(
       'Ajouter une petite quantité de sirop ou de liqueur pour arrondir le profil.'
     )
   }
 
-  if (profile.bitterness > 3.5) {
+  if (bitterness > 3.5) {
     suggestions.push(
       'Diminuer les bitters ou les ingrédients fortement amers.'
     )
-  } else if (profile.bitterness < 0.5) {
+  } else if (bitterness < 0.5) {
     suggestions.push(
       'Introduire une légère touche amère pour apporter de la profondeur.'
     )
   }
 
-  if (profile.body < 1.5) {
+  if (body < 1.5) {
     suggestions.push(
       'Apporter davantage de texture avec un ingrédient adapté : blanc d’œuf, aquafaba ou sirop.'
     )
-  } else if (profile.body > 4) {
+  } else if (body > 4) {
     suggestions.push(
       'Alléger la texture en réduisant les ingrédients épais ou sirupeux.'
     )
   }
 
-  if (profile.intensity < 1.5) {
+  if (intensity < 1.5) {
     suggestions.push(
       'Renforcer la signature aromatique avec un ingrédient plus expressif.'
     )
-  } else if (profile.intensity > 4.5) {
+  } else if (intensity > 4.5) {
     suggestions.push(
       'Simplifier la composition pour laisser respirer les arômes principaux.'
     )
@@ -190,15 +228,22 @@ export function generateBalanceSuggestions(
   return suggestions
 }
 
+/**
+ * Analyse complète d'une recette.
+ * ingredientWeights est facultatif et doit suivre le même ordre
+ * que le tableau ingredients.
+ */
 export function analyzeRecipeBalance(
-  ingredients: Ingredient[]
+  ingredients: Ingredient[],
+  ingredientWeights?: number[]
 ): BalanceAnalysis {
-  const profile = calculateBalanceProfile(ingredients)
+  const profile = calculateBalanceProfile(
+    ingredients,
+    ingredientWeights
+  )
 
   const score = calculateBalanceScore(profile)
-
   const { strengths, weaknesses } = analyzeBalance(profile)
-
   const suggestions = generateBalanceSuggestions(profile)
 
   return {
