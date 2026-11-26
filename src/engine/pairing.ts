@@ -37,10 +37,38 @@ function clamp(value: number, min = 0, max = 100): number {
   return Math.max(min, Math.min(max, value))
 }
 
+
 function getAromaAffinity(
   ingredientA: Ingredient,
   ingredientB: Ingredient
 ): number {
+  const aromasA = ingredientA.aromas.map(aroma => aroma.toLowerCase())
+  const aromasB = ingredientB.aromas.map(aroma => aroma.toLowerCase())
+
+  const shared = aromasA.filter(aroma => aromasB.includes(aroma))
+
+  const familyA = unique(
+    aromasA.flatMap(aroma =>
+      findAroma(aroma).map(match => match.family)
+    )
+  )
+
+  const familyB = unique(
+    aromasB.flatMap(aroma =>
+      findAroma(aroma).map(match => match.family)
+    )
+  )
+
+  const sharedFamilies = familyA.filter(family =>
+    familyB.includes(family)
+  )
+
+  return Math.min(
+    30,
+    shared.length * 10 + sharedFamilies.length * 5
+  )
+}
+
   const aromasA = ingredientA.aromas.map(aroma => aroma.toLowerCase())
   const aromasB = ingredientB.aromas.map(aroma => aroma.toLowerCase())
 
