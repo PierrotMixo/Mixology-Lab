@@ -4,6 +4,10 @@ import {
   type Ingredient,
 } from './ingredients'
 
+import {
+  findAroma,
+} from './aromas'
+
 export type PairingType =
   | 'complementarity'
   | 'contrast'
@@ -25,49 +29,118 @@ export type PairingSuggestion = {
   reasons: string[]
 }
 
+function unique(values: string[]): string[] {
+  return [...new Set(values)]
+}
+
+function clamp(value: number, min = 0, max = 100): number {
+  return Math.max(min, Math.min(max, value))
+}
+
+function getAromaAffinity(
+  ingredientA: Ingredient,
+  ingredientB: Ingredient
+): number {
+  const aromasA = ingredientA.aromas.map(aroma => aroma.toLowerCase())
+  const aromasB = ingredientB.aromas.map(aroma => aroma.toLowerCase())
+
+  const shared = aromasA.filter(aroma => aromasB.includes(aroma))
+
+  const familyA = unique(
+    aromasA
+      .map(aroma => findAroma(aroma)?.family)
+      .filter((family): family is NonNullable<typeof family> => Boolean(family))
+  )
+
+  const familyB = unique(
+    aromasB
+      .map(aroma => findAroma(aroma)?.family)
+      .filter((family): family is NonNullable<typeof family> => Boolean(family))
+  )
+
+  const sharedFamilies = familyA.filter(family => familyB.includes(family))
+
+  return Math.min(
+    30,
+    shared.length * 10 + sharedFamilies.length * 5
+  )
+}
+
+function getTasteComplementarity(
+  ingredientA: Ingredient,
+  ingredientB: Ingredient
+): number {
+  const a = ingredientA.taste
+  const b = ingredientB.taste
+
+  let score = 0
+
+  // L'acidité peut équilibrer une forte sucrosité.
+  if (a.acidity >= 3 && b.sweetness >= 3) score += 12
+  if (b.acidity >= 3 && a.sweetness >= 3) score += 12
+
+  // L'amertume peut être adoucie par la sucrosité.
+  if (a.bitterness >= 3 && b.sweetness >= 2) score += 8
+  if (b.bitterness >= 3 && a.sweetness >= 2) score += 8
+
+  // Une différence de corps peut apporter de la structure.
+  if (Math.abs(a.body - b.body) >= 2) score += 5
+
+  // Une intensité très élevée peut dominer un ingrédient délicat.
+  const intensityDifference = Math.abs(a.intensity - b.intensity)
+
+  if (intensityDifference <= 1) score += 5
+  else if (intensityDifference >= 4) score -= 8
+
+  return score
+}
+
+function getContrastScore(
+  ingredientA: Ingredient,
+  ingredientB: Ingredient
+): number {
+  const a = ingredientA.taste
+  const b = ingredientB.taste
+
+  let score = 0
+
+  if (Math.abs(a.acidity - b.sweetness) >= 2) score += 4
+  if (Math.abs(a.bitterness - b.sweetness) >= 2) score += 4
+  if (Math.abs(a.body - b.body) >= 2) score += 3
+
+  return score
+}
+
 export function compareIngredients(
   ingredientA: Ingredient,
   ingredientB: Ingredient
 ): PairingResult {
-  const sharedAromas = ingredientA.aromas.filter(
-    aroma => ingredientB.aromas.includes(aroma)
-  )
-
-  const sharedTags = ingredientA.pairingTags.filter(
-    tag => ingredientB.pairingTags.includes(tag)
-  )
-
-  const tasteKeys = [
-    'acidity',
-    'sweetness',
-    'bitterness',
-    'body',
-    'intensity',
-  ] as const
-
-  const differences = tasteKeys.map(
-    key => Math.abs(
-      ingredientA.taste[key] - ingredientB.taste[key]
+  const sharedAromas = unique(
+    ingredientA.aromas.filter(aroma =>
+      ingredientB.aromas.some(
+        other => other.toLowerCase() === aroma.toLowerCase()
+      )
     )
   )
 
-  const complementarity =
-    Math.abs(
-      ingredientA.taste.acidity -
-      ingredientB.taste.sweetness
-    ) <= 1.5 ||
-    Math.abs(
-      ingredientA.taste.bitterness -
-      ingredientB.taste.sweetness
-    ) <= 1.5
-
-  const contrast = differences.some(
-    difference => difference >= 2
+  const sharedTags = unique(
+    ingredientA.pairingTags.filter(tag =>
+      ingredientB.pairingTags.some(
+        other => other.toLowerCase() === tag.toLowerCase()
+      )
+    )
   )
+
+  const aromaScore = getAromaAffinity(ingredientA, ingredientB)
+  const tasteScore = getTasteComplementarity(ingredientA, ingredientB)
+  const contrastScore = getContrastScore(ingredientA, ingredientB)
+
+  const complementarity = tasteScore >= 12
+  const contrast = contrastScore >= 7
 
   const type: PairingType[] = []
 
-  if (sharedAromas.length > 0) {
+  if (sharedAromas.length > 0 || aromaScore > 0) {
     type.push('shared_aromas')
   }
 
@@ -79,22 +152,41 @@ export function compareIngredients(
     type.push('contrast')
   }
 
-  const score = Math.min(
-    100,
+  const score = clamp(
     Math.round(
-      30 +
-      sharedAromas.length * 12 +
-      sharedTags.length * 10 +
-      (complementarity ? 15 : 0) +
-      (contrast ? 5 : 0)
+      25 +
+      aromaScore +
+      sharedTags.length * 5 +
+      tasteScore +
+      contrastScore
     )
   )
 
-  const explanation = sharedAromas.length > 0
-    ? `Ces ingrédients partagent des notes aromatiques : ${sharedAromas.join(', ')}.`
-    : complementarity
-      ? 'Leurs profils gustatifs présentent une complémentarité intéressante.'
-      : 'Cette association mérite une expérimentation en dégustation.'
+  const explanationParts: string[] = []
+
+  if (sharedAromas.length > 0) {
+    explanationParts.push(
+      `Notes aromatiques communes : ${sharedAromas.join(', ')}.`
+    )
+  }
+
+  if (complementarity) {
+    explanationParts.push(
+      'Les profils gustatifs présentent une complémentarité intéressante.'
+    )
+  }
+
+  if (contrast) {
+    explanationParts.push(
+      'Le contraste peut apporter du relief à l’association.'
+    )
+  }
+
+  if (explanationParts.length === 0) {
+    explanationParts.push(
+      'Aucune affinité forte n’a été identifiée dans la base actuelle. Une dégustation permettra de valider cette association.'
+    )
+  }
 
   return {
     ingredientA: ingredientA.name,
@@ -103,7 +195,7 @@ export function compareIngredients(
     type,
     sharedAromas,
     sharedTags,
-    explanation,
+    explanation: explanationParts.join(' '),
   }
 }
 
@@ -131,16 +223,16 @@ export function suggestPairings(
 
       if (comparison.sharedTags.length > 0) {
         reasons.push(
-          `Affinités gustatives : ${comparison.sharedTags.join(', ')}`
+          `Affinités : ${comparison.sharedTags.join(', ')}`
         )
       }
 
       if (comparison.type.includes('complementarity')) {
-        reasons.push('Complémentarité des profils gustatifs')
+        reasons.push('Complémentarité gustative')
       }
 
       if (comparison.type.includes('contrast')) {
-        reasons.push('Contraste gustatif intéressant')
+        reasons.push('Contraste gustatif')
       }
 
       return {
@@ -149,7 +241,7 @@ export function suggestPairings(
         reasons,
       }
     })
-    .filter(item => item.reasons.length > 0)
+    .filter(item => item.score >= 35 && item.reasons.length > 0)
     .sort((a, b) => b.score - a.score)
     .slice(0, Math.max(0, limit))
 }
@@ -165,36 +257,5 @@ export function explainPairing(
     return null
   }
 
-  const result = compareIngredients(ingredientA, ingredientB)
-
-  const explanations: string[] = []
-
-  if (result.sharedAromas.length > 0) {
-    explanations.push(
-      `Les deux ingrédients partagent des notes de ${result.sharedAromas.join(', ')}. Cette proximité crée une continuité aromatique.`
-    )
-  }
-
-  if (result.type.includes('complementarity')) {
-    explanations.push(
-      'Leurs caractéristiques gustatives peuvent se compléter et contribuer à un profil plus harmonieux.'
-    )
-  }
-
-  if (result.type.includes('contrast')) {
-    explanations.push(
-      'Le contraste entre leurs profils peut apporter du relief et de la complexité.'
-    )
-  }
-
-  if (explanations.length === 0) {
-    explanations.push(
-      'Cette association ne présente pas de compatibilité évidente dans la base actuelle. Une dégustation comparative permettra de la valider.'
-    )
-  }
-
-  return {
-    ...result,
-    explanation: explanations.join(' '),
-  }
+  return compareIngredients(ingredientA, ingredientB)
 }
