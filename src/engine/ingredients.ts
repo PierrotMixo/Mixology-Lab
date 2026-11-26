@@ -116,6 +116,80 @@ export const ingredients: Ingredient[] = [
     pairingTags: ['pamplemousse', 'piment', 'agrumes', 'sel', 'herbes'],
     notes: 'La fumée est variable selon les méthodes de production.'
   },
+  // EXTENSION SPIRITUEUX - LOT 5
+  {
+    id: 'tequila-reposado',
+    name: 'Tequila Reposado',
+    aliases: ['Reposado tequila'],
+    family: 'spiritueux',
+    subfamily: 'Tequila',
+    roles: ['base', 'aromatique'],
+    aromas: ['agave', 'vanille', 'bois', 'poivre', 'agrumes'],
+    taste: { acidity: 1, sweetness: 2, bitterness: 1, body: 4, intensity: 4 },
+    pairingTags: ['citron vert', 'pamplemousse', 'vanille', 'ananas', 'épices'],
+    notes: 'Tequila reposée en contenant de bois pendant au moins deux mois, avec des notes d’agave et un apport variable du bois.'
+  },
+  {
+    id: 'tequila-anejo',
+    name: 'Tequila Añejo',
+    aliases: ['Añejo tequila'],
+    family: 'spiritueux',
+    subfamily: 'Tequila',
+    roles: ['base', 'aromatique'],
+    aromas: ['agave', 'bois', 'vanille', 'caramel', 'épices'],
+    taste: { acidity: 1, sweetness: 2, bitterness: 1, body: 4, intensity: 5 },
+    pairingTags: ['orange', 'chocolat', 'café', 'vanille', 'cannelle'],
+    notes: 'Tequila vieillie au moins un an en fût de chêne de capacité réglementaire, avec un profil plus boisé et complexe.'
+  },
+  {
+    id: 'tequila-blanco-premium',
+    name: 'Tequila Blanco 100 % agave',
+    aliases: ['Tequila plata', 'Tequila silver 100% agave'],
+    family: 'spiritueux',
+    subfamily: 'Tequila',
+    roles: ['base', 'aromatique'],
+    aromas: ['agave frais', 'poivre', 'agrumes', 'herbes'],
+    taste: { acidity: 1, sweetness: 1, bitterness: 1, body: 3, intensity: 4 },
+    pairingTags: ['citron vert', 'pamplemousse', 'concombre', 'piment', 'coriandre'],
+    notes: 'Tequila non vieillie ou très peu vieillie, élaborée à partir de 100 % d’agave bleu. À distinguer des tequilas mixto.'
+  },
+  {
+    id: 'mezcal-anejo',
+    name: 'Mezcal Añejo',
+    aliases: ['Añejo mezcal', 'Mezcal vieilli'],
+    family: 'spiritueux',
+    subfamily: 'Mezcal',
+    roles: ['base', 'aromatique'],
+    aromas: ['fumée', 'agave', 'bois', 'épices', 'fruits secs'],
+    taste: { acidity: 1, sweetness: 1, bitterness: 2, body: 4, intensity: 5 },
+    pairingTags: ['orange', 'chocolat noir', 'piment', 'cacao', 'épices'],
+    notes: 'Mezcal vieilli au moins un an en contenant de bois, associant notes d’agave, fumée éventuelle et bois.'
+  },
+  {
+    id: 'bacanora',
+    name: 'Bacanora',
+    aliases: ['Spiritueux d’agave de Sonora'],
+    family: 'spiritueux',
+    subfamily: 'Spiritueux d’agave mexicain',
+    roles: ['base', 'aromatique'],
+    aromas: ['agave', 'fumée', 'herbes', 'poivre', 'terre'],
+    taste: { acidity: 1, sweetness: 1, bitterness: 2, body: 3, intensity: 5 },
+    pairingTags: ['citron vert', 'pamplemousse', 'piment', 'coriandre', 'orange'],
+    notes: 'Spiritueux mexicain d’agave originaire du Sonora, au profil pouvant présenter des notes végétales, terreuses et fumées.'
+  },
+  {
+    id: 'sotol',
+    name: 'Sotol',
+    aliases: ['Spiritueux de Dasylirion'],
+    family: 'spiritueux',
+    subfamily: 'Spiritueux mexicain',
+    roles: ['base', 'aromatique'],
+    aromas: ['végétal', 'terre', 'herbes', 'poivre', 'fumée'],
+    taste: { acidity: 1, sweetness: 0, bitterness: 2, body: 3, intensity: 4 },
+    pairingTags: ['citron vert', 'pamplemousse', 'herbes', 'piment', 'concombre'],
+    notes: 'Spiritueux traditionnel du nord du Mexique élaboré à partir de Dasylirion, une plante distincte de l’agave.'
+  },
+  
   {
     id: 'bourbon',
     name: 'Bourbon',
@@ -143,7 +217,7 @@ export const ingredients: Ingredient[] = [
   {
     id: 'scotch-whisky',
     name: 'Scotch whisky',
-    aliases: ['Whisky écossais', 'Single malt'],
+    aliases: ['Whisky écossais'],
     family: 'spiritueux',
     subfamily: 'Whisky écossais',
     roles: ['base'],
@@ -167,6 +241,315 @@ export const ingredients: Ingredient[] = [
 
   // LIQUEURS ET MODIFICATEURS
   {
+  // EXTENSION SPIRITUEUX - LOT 1
+  {
+  // EXTENSION SPIRITUEUX - LOT 2
+  {
+    id: 'irish-whiskey',
+    name: 'Whiskey irlandais',
+    aliases: ['Irish whiskey'],
+    family: 'spiritueux',
+    subfamily: 'Whiskey irlandais',
+    roles: ['base', 'aromatique'],
+    aromas: ['céréales', 'vanille', 'fruits', 'miel'],
+    taste: { acidity: 1, sweetness: 2, bitterness: 0, body: 3, intensity: 3 },
+    pairingTags: ['pomme', 'poire', 'miel', 'vanille', 'gingembre'],
+    notes: 'Whiskey généralement doux et accessible, souvent marqué par les céréales, les fruits et le bois.'
+  },
+  {
+    id: 'japanese-whisky',
+    name: 'Whisky japonais',
+    aliases: ['Japanese whisky'],
+    family: 'spiritueux',
+    subfamily: 'Whisky japonais',
+    roles: ['base', 'aromatique'],
+    aromas: ['céréales', 'bois', 'fruits', 'épices', 'floral'],
+    taste: { acidity: 1, sweetness: 1, bitterness: 1, body: 3, intensity: 4 },
+    pairingTags: ['poire', 'agrumes', 'thé', 'miel', 'épices'],
+    notes: 'Famille très diverse, souvent recherchée pour son équilibre et sa précision aromatique.'
+  },
+  {
+    id: 'blended-scotch',
+    name: 'Blended Scotch whisky',
+    aliases: ['Scotch blend', 'Blended Scotch'],
+    family: 'spiritueux',
+    subfamily: 'Whisky écossais assemblé',
+    roles: ['base', 'aromatique'],
+    aromas: ['céréales', 'malt', 'bois', 'vanille', 'fumée'],
+    taste: { acidity: 1, sweetness: 1, bitterness: 1, body: 3, intensity: 4 },
+    pairingTags: ['miel', 'pomme', 'citron', 'gingembre', 'bois'],
+    notes: 'Assemblage de whiskies de malt et de grain. Profil variable selon les maisons et les proportions.'
+  },
+  {
+    id: 'old-tom-gin',
+    name: 'Old Tom Gin',
+    aliases: ['Gin Old Tom'],
+    family: 'spiritueux',
+    subfamily: 'Gin',
+    roles: ['base', 'aromatique'],
+    aromas: ['genièvre', 'agrumes', 'épices', 'floral'],
+    taste: { acidity: 0, sweetness: 2, bitterness: 1, body: 3, intensity: 4 },
+    pairingTags: ['citron', 'orange', 'gingembre', 'floral', 'épices'],
+    notes: 'Style de gin traditionnel légèrement adouci, particulièrement intéressant en cocktails classiques.'
+  },
+  {
+    id: 'navy-strength-gin',
+    name: 'Navy Strength Gin',
+    aliases: ['Gin Navy Strength', 'Gin 57°'],
+    family: 'spiritueux',
+    subfamily: 'Gin',
+    roles: ['base', 'aromatique'],
+    aromas: ['genièvre', 'agrumes', 'botanique', 'épices'],
+    taste: { acidity: 0, sweetness: 0, bitterness: 1, body: 4, intensity: 5 },
+    pairingTags: ['citron', 'pamplemousse', 'romarin', 'épices', 'concombre'],
+    notes: 'Gin à degré alcoolique élevé, souvent autour de 57 % vol., avec une présence aromatique puissante.'
+  },
+  {
+    id: 'genever',
+    name: 'Genièvre (Genever)',
+    aliases: ['Genever', 'Holland gin', 'Jenever'],
+    family: 'spiritueux',
+    subfamily: 'Genièvre',
+    roles: ['base', 'aromatique'],
+    aromas: ['genièvre', 'malt', 'céréales', 'herbes'],
+    taste: { acidity: 0, sweetness: 1, bitterness: 1, body: 4, intensity: 4 },
+    pairingTags: ['pomme', 'malt', 'épices', 'agrumes', 'herbes'],
+    notes: 'Eau-de-vie traditionnelle des Pays-Bas et de Belgique, souvent plus maltée et ronde qu’un gin classique.'
+  },
+  
+    id: 'aged-agricultural-rum',
+    name: 'Rhum agricole vieux',
+    aliases: ['Rhum vieux agricole', 'Rhum vieux de Martinique'],
+    family: 'spiritueux',
+    subfamily: 'Rhum agricole',
+    roles: ['base', 'aromatique'],
+    aromas: ['canne', 'bois', 'vanille', 'épices', 'fruits secs'],
+    taste: { acidity: 1, sweetness: 2, bitterness: 1, body: 4, intensity: 5 },
+    pairingTags: ['cacao', 'café', 'orange', 'vanille', 'épices'],
+    notes: 'Rhum agricole issu du jus de canne, vieilli en fût. Profil marqué par le terroir et le vieillissement.'
+  },
+  {
+    id: 'traditional-white-rum',
+    name: 'Rhum blanc traditionnel',
+    aliases: ['Rhum blanc', 'Rhum blanc de mélasse', 'White rum'],
+    family: 'spiritueux',
+    subfamily: 'Rhum traditionnel',
+    roles: ['base'],
+    aromas: ['canne', 'mélasse', 'vanille', 'fruits légers'],
+    taste: { acidity: 0, sweetness: 1, bitterness: 0, body: 2, intensity: 3 },
+    pairingTags: ['citron vert', 'menthe', 'ananas', 'coco', 'fruits tropicaux'],
+    notes: 'Rhum blanc généralement issu de mélasse, au profil relativement neutre ou légèrement fruité, très polyvalent en cocktail.'
+  },
+
+  {
+    id: 'jamaican-rum',
+    name: 'Rhum jamaïcain',
+    aliases: ['Jamaican rum', 'Rhum high ester'],
+    family: 'spiritueux',
+    subfamily: 'Rhum traditionnel jamaïcain',
+    roles: ['base', 'aromatique'],
+    aromas: ['banane mûre', 'ananas', 'fruits fermentés', 'épices'],
+    taste: { acidity: 1, sweetness: 1, bitterness: 1, body: 4, intensity: 5 },
+    pairingTags: ['ananas', 'banane', 'citron vert', 'gingembre', 'épices'],
+    notes: 'Souvent expressif et riche en esters. Intensité aromatique variable selon la distillerie.'
+  },
+  {
+    id: 'cachaca',
+    name: 'Cachaça',
+    aliases: ['Rhum brésilien'],
+    family: 'spiritueux',
+    subfamily: 'Cachaça',
+    roles: ['base'],
+    aromas: ['canne fraîche', 'végétal', 'fruité', 'herbes'],
+    taste: { acidity: 1, sweetness: 1, bitterness: 1, body: 3, intensity: 4 },
+    pairingTags: ['citron vert', 'fruits tropicaux', 'gingembre', 'menthe'],
+    notes: 'Eau-de-vie brésilienne issue du jus de canne frais, généralement non vieillie dans les versions classiques.'
+  },
+  {
+    id: 'pisco',
+    name: 'Pisco',
+    aliases: ['Pisco péruvien', 'Pisco chilien'],
+    family: 'spiritueux',
+    subfamily: 'Eau-de-vie de raisin',
+    roles: ['base', 'aromatique'],
+    aromas: ['raisin', 'fleurs', 'fruits blancs', 'agrumes'],
+    taste: { acidity: 1, sweetness: 1, bitterness: 0, body: 3, intensity: 4 },
+    pairingTags: ['citron', 'citron vert', 'fruits blancs', 'floral', 'herbes'],
+    notes: 'Eau-de-vie de raisin dont le profil varie selon les cépages et les traditions de production.'
+  },
+  {
+    id: 'armagnac',
+    name: 'Armagnac',
+    aliases: ['Eau-de-vie d'Armagnac'],
+    family: 'spiritueux',
+    subfamily: 'Brandy',
+    roles: ['base', 'aromatique'],
+    aromas: ['raisin', 'prune', 'bois', 'épices', 'fruits secs'],
+    taste: { acidity: 1, sweetness: 1, bitterness: 1, body: 4, intensity: 5 },
+    pairingTags: ['prune', 'orange', 'chocolat', 'vanille', 'noix'],
+    notes: 'Eau-de-vie de vin du Sud-Ouest français, souvent riche et expressive après vieillissement.'
+  },
+  {
+    id: 'calvados',
+    name: 'Calvados',
+    aliases: ['Eau-de-vie de cidre', 'Apple brandy normand'],
+    family: 'spiritueux',
+    subfamily: 'Eau-de-vie de cidre',
+    roles: ['base', 'aromatique'],
+    aromas: ['pomme', 'poire', 'bois', 'vanille', 'épices'],
+    taste: { acidity: 2, sweetness: 1, bitterness: 1, body: 3, intensity: 4 },
+    pairingTags: ['pomme', 'poire', 'cannelle', 'caramel', 'citron'],
+    notes: 'Eau-de-vie normande issue du cidre ou du poiré selon les appellations et catégories.'
+  },
+  // EXTENSION SPIRITUEUX - LOT 4
+  {
+    id: 'raspberry-eau-de-vie',
+    name: 'Eau-de-vie de framboise',
+    aliases: ['Framboise', 'Raspberry eau-de-vie'],
+    family: 'spiritueux',
+    subfamily: 'Eau-de-vie de fruit',
+    roles: ['base', 'aromatique'],
+    aromas: ['framboise', 'fruits rouges', 'floral'],
+    taste: { acidity: 1, sweetness: 0, bitterness: 0, body: 2, intensity: 4 },
+    pairingTags: ['framboise', 'citron', 'rose', 'chocolat blanc', 'fruits rouges'],
+    notes: 'Eau-de-vie sèche et expressive, obtenue par fermentation puis distillation de framboises.'
+  },
+  {
+    id: 'mirabelle-eau-de-vie',
+    name: 'Eau-de-vie de mirabelle',
+    aliases: ['Mirabelle', 'Mirabelle brandy'],
+    family: 'spiritueux',
+    subfamily: 'Eau-de-vie de fruit',
+    roles: ['base', 'aromatique'],
+    aromas: ['mirabelle', 'prune jaune', 'fruit mûr', 'floral'],
+    taste: { acidity: 1, sweetness: 0, bitterness: 0, body: 2, intensity: 4 },
+    pairingTags: ['mirabelle', 'pêche', 'amande', 'vanille', 'miel'],
+    notes: 'Eau-de-vie fruitée et délicate, généralement sèche malgré ses arômes de fruits mûrs.'
+  },
+  {
+    id: 'kirsch',
+    name: 'Kirsch',
+    aliases: ['Eau-de-vie de cerise', 'Cherry eau-de-vie'],
+    family: 'spiritueux',
+    subfamily: 'Eau-de-vie de fruit',
+    roles: ['base', 'aromatique'],
+    aromas: ['cerise', 'noyau', 'amande', 'fruit rouge'],
+    taste: { acidity: 1, sweetness: 0, bitterness: 1, body: 2, intensity: 4 },
+    pairingTags: ['cerise', 'chocolat', 'amande', 'fruits rouges', 'vanille'],
+    notes: 'Eau-de-vie de cerise incolore, souvent marquée par les notes de noyau et d’amande.'
+  },
+  {
+    id: 'plum-eau-de-vie',
+    name: 'Eau-de-vie de prune',
+    aliases: ['Prune brandy', 'Eau-de-vie de prunes'],
+    family: 'spiritueux',
+    subfamily: 'Eau-de-vie de fruit',
+    roles: ['base', 'aromatique'],
+    aromas: ['prune', 'fruits secs', 'noyau', 'floral'],
+    taste: { acidity: 1, sweetness: 0, bitterness: 1, body: 3, intensity: 4 },
+    pairingTags: ['prune', 'cannelle', 'amande', 'chocolat', 'orange'],
+    notes: 'Famille d’eaux-de-vie dont le profil varie selon les variétés de prunes et les méthodes de distillation.'
+  },
+  {
+    id: 'grappa',
+    name: 'Grappa',
+    aliases: ['Eau-de-vie de marc italienne'],
+    family: 'spiritueux',
+    subfamily: 'Eau-de-vie de marc',
+    roles: ['base', 'aromatique'],
+    aromas: ['raisin', 'marc', 'floral', 'herbes'],
+    taste: { acidity: 1, sweetness: 0, bitterness: 2, body: 3, intensity: 5 },
+    pairingTags: ['raisin', 'agrumes', 'amande', 'café', 'chocolat noir'],
+    notes: 'Eau-de-vie italienne obtenue par distillation du marc de raisin. Son caractère varie selon le cépage et le vieillissement.'
+  },
+  {
+    id: 'marc-de-raisin',
+    name: 'Marc de raisin',
+    aliases: ['Eau-de-vie de marc', 'Marc français'],
+    family: 'spiritueux',
+    subfamily: 'Eau-de-vie de marc',
+    roles: ['base', 'aromatique'],
+    aromas: ['raisin', 'marc', 'bois', 'épices'],
+    taste: { acidity: 1, sweetness: 0, bitterness: 2, body: 3, intensity: 5 },
+    pairingTags: ['raisin', 'noix', 'agrumes', 'chocolat noir', 'épices'],
+    notes: 'Eau-de-vie française issue de la distillation du marc de raisin, avec un profil dépendant de la région et du vieillissement.'
+  },
+
+
+  // EXTENSION SPIRITUEUX - LOT 3
+  {
+    id: 'flavoured-vodka',
+    name: 'Vodka aromatisée',
+    aliases: ['Vodka parfumée', 'Flavoured vodka'],
+    family: 'spiritueux',
+    subfamily: 'Vodka aromatisée',
+    roles: ['base', 'aromatique'],
+    aromas: ['fruits', 'agrumes', 'épices', 'floral'],
+    taste: { acidity: 0, sweetness: 1, bitterness: 0, body: 2, intensity: 3 },
+    pairingTags: ['fruits rouges', 'agrumes', 'vanille', 'herbes', 'épices'],
+    notes: 'Vodka aromatisée par macération, infusion ou ajout d’arômes. Le profil dépend entièrement de la saveur choisie.'
+  },
+  {
+    id: 'contemporary-gin',
+    name: 'Gin contemporain',
+    aliases: ['New Western Gin', 'New Western Dry Gin'],
+    family: 'spiritueux',
+    subfamily: 'Gin',
+    roles: ['base', 'aromatique'],
+    aromas: ['floral', 'agrumes', 'herbes', 'fruits', 'botanique'],
+    taste: { acidity: 0, sweetness: 0, bitterness: 1, body: 3, intensity: 4 },
+    pairingTags: ['fleurs', 'agrumes', 'concombre', 'herbes', 'fruits'],
+    notes: 'Style de gin où le genièvre peut être moins dominant, laissant davantage de place aux autres botaniques.'
+  },
+  {
+    id: 'spiced-rum',
+    name: 'Rhum épicé',
+    aliases: ['Spiced rum', 'Rhum aux épices'],
+    family: 'spiritueux',
+    subfamily: 'Rhum aromatisé',
+    roles: ['base', 'aromatique'],
+    aromas: ['vanille', 'cannelle', 'gingembre', 'clou de girofle', 'caramel'],
+    taste: { acidity: 0, sweetness: 3, bitterness: 1, body: 3, intensity: 4 },
+    pairingTags: ['ananas', 'orange', 'pomme', 'cacao', 'gingembre'],
+    notes: 'Rhum aromatisé avec des épices et parfois des ingrédients sucrants. Les profils varient fortement selon les producteurs.'
+  },
+  {
+    id: 'jamaican-white-rum',
+    name: 'Rhum blanc jamaïcain',
+    aliases: ['Jamaican white rum', 'Rhum blanc high ester'],
+    family: 'spiritueux',
+    subfamily: 'Rhum traditionnel jamaïcain',
+    roles: ['base', 'aromatique'],
+    aromas: ['banane', 'ananas', 'agrumes', 'fruits fermentés', 'canne'],
+    taste: { acidity: 1, sweetness: 1, bitterness: 1, body: 3, intensity: 5 },
+    pairingTags: ['ananas', 'banane', 'citron vert', 'gingembre', 'fruits tropicaux'],
+    notes: 'Rhum non vieilli ou très peu vieilli, souvent très expressif et riche en esters.'
+  },
+  {
+    id: 'single-malt-scotch',
+    name: 'Single Malt Scotch Whisky',
+    aliases: ['Single malt écossais', 'Scotch single malt'],
+    family: 'spiritueux',
+    subfamily: 'Whisky écossais single malt',
+    roles: ['base', 'aromatique'],
+    aromas: ['malt', 'fruits', 'bois', 'vanille', 'tourbe'],
+    taste: { acidity: 1, sweetness: 1, bitterness: 1, body: 4, intensity: 5 },
+    pairingTags: ['miel', 'pomme', 'poire', 'chocolat', 'fumé'],
+    notes: 'Whisky écossais issu d’une seule distillerie et élaboré à partir d’orge maltée. Le profil dépend du terroir, de la distillation et du vieillissement.'
+  },
+  {
+    id: 'poire-williams',
+    name: 'Eau-de-vie de poire Williams',
+    aliases: ['Poire Williams', 'Williams pear brandy'],
+    family: 'spiritueux',
+    subfamily: 'Eau-de-vie de fruit',
+    roles: ['base', 'aromatique'],
+    aromas: ['poire fraîche', 'fruit blanc', 'floral'],
+    taste: { acidity: 1, sweetness: 0, bitterness: 0, body: 2, intensity: 4 },
+    pairingTags: ['poire', 'pomme', 'vanille', 'amande', 'chocolat blanc'],
+    notes: 'Eau-de-vie de poire très expressive, généralement sèche malgré ses arômes naturellement fruités.'
+  },
+
     id: 'triple-sec',
     name: 'Triple sec',
     aliases: ['Liqueur d’orange', 'Curaçao sec'],
