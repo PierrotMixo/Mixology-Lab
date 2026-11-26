@@ -4,6 +4,14 @@ import {
   type Ingredient,
 } from './ingredients'
 
+import {
+  analyzeBalance,
+  calculateBalanceScore,
+  generateBalanceSuggestions,
+  type BalanceAnalysis,
+  type BalanceProfile,
+} from './balance'
+
 export type RecipeIngredientInput = {
   name: string
   amount: string
@@ -16,10 +24,103 @@ export type ParsedIngredient = {
   ingredient: Ingredient | undefined
 }
 
+export type RecipeBalanceResult = BalanceAnalysis & {
+  unknownIngredients: string[]
+  recognizedIngredients: number
+  totalIngredients: number
+  confidence: number
+}
+
+const UNIT_CONVERSIONS: Record<string, number> = {
+  ml: 1,
+  millilitre: 1,
+  millilitres: 1,
+  cl: 10,
+  centilitre: 10,
+  centilitres: 10,
+  l: 1000,
+  litre: 1000,
+  litres: 1000,
+  oz: 29.5735,
+  ounce: 29.5735,
+  ounces: 29.5735,
+
+  dash: 0.8,
+  dashes: 0.8,
+  trait: 0.8,
+  traits: 0.8,
+
+  goutte: 0.05,
+  gouttes: 0.05,
+  drop: 0.05,
+  drops: 0.05,
+
+  cuillère: 5,
+  cuillere: 5,
+  'cuillère à café': 5,
+  'cuillere a cafe': 5,
+  'cuillère à soupe': 15,
+  'cuillere a soupe': 15,
+  tsp: 5,
+  tbsp: 15,
+
+  feuille: 0.5,
+  feuilles: 0.5,
+  branche: 1,
+  branches: 1,
+  tranche: 2,
+  tranches: 2,
+  quartier: 5,
+  quartiers: 5,
+  pièce: 10,
+  pieces: 10,
+  portion: 10,
+  portions: 10,
+}
+
+function normalizeUnit(unit: string): string {
+  return unit
+    .trim()
+    .toLowerCase()
+    .replace(/\./g, '')
+    .replace(/\s+/g, ' ')
+}
+
 export function parseIngredientAmount(
   amount: string
 ): { quantity: number; unit: string } {
   const normalized = amount.trim().replace(',', '.')
+
+  const fraction = normalized.match(
+    /^(\d+)\s*\/\s*(\d+)\s*(.*)$/
+  )
+
+  if (fraction) {
+    const denominator = Number(fraction[2])
+
+    return {
+      quantity: denominator === 0
+        ? 1
+        : Number(fraction[1]) / denominator,
+      unit: normalizeUnit(fraction[3]) || 'portion',
+    }
+  }
+
+  const mixedFraction = normalized.match(
+    /^(\d+)\s+(\d+)\s*\/\s*(\d+)\s*(.*)$/
+  )
+
+  if (mixedFraction) {
+    const denominator = Number(mixedFraction[3])
+
+    return {
+      quantity: denominator === 0
+        ? 1
+        : Number(mixedFraction[1]) +
+          Number(mixedFraction[2]) / denominator,
+      unit: normalizeUnit(mixedFraction[4]) || 'portion',
+    }
+  }
 
   const match = normalized.match(
     /^(\d+(?:\.\d+)?)\s*(.*)$/
@@ -34,7 +135,7 @@ export function parseIngredientAmount(
 
   return {
     quantity: Number(match[1]),
-    unit: match[2].trim().toLowerCase() || 'portion',
+    unit: normalizeUnit(match[2]) || 'portion',
   }
 }
 
@@ -54,53 +155,9 @@ export function parseRecipeIngredients(
 }
 
 function getIngredientWeight(item: ParsedIngredient): number {
-  const { quantity, unit } = item
+  const conversion = UNIT_CONVERSIONS[item.unit] ?? 1
 
-  const conversions: Record<string, number> = {
-    ml: 1,
-    cl: 10,
-    l: 1000,
-    dash: 1,
-    dashes: 1,
-    trait: 1,
-    traits: 1,
-    goutte: 0.05,
-    gouttes: 0.05,
-    drop: 0.05,
-    drops: 0.05,
-    cuillère: 5,
-    cuillere: 5,
-    'cuillère à café': 5,
-    'cuillère à soupe': 15,
-    tsp: 5,
-    tbsp: 15,
-    feuille: 0.5,
-    feuilles: 0.5,
-    branche: 1,
-    branches: 1,
-    tranche: 2,
-    tranches: 2,
-    quartier: 5,
-    quartiers: 5,
-    pièce: 10,
-    pieces: 10,
-    portions: 10,
-    portion: 10,
-  }
-
-  return quantity * (conversions[unit] ?? 1)
-}
-
-import {
-  analyzeBalance,
-  calculateBalanceScore,
-  generateBalanceSuggestions,
-  type BalanceAnalysis,
-  type BalanceProfile,
-} from './balance'
-
-export type RecipeBalanceResult = BalanceAnalysis & {
-  unknownIngredients: string[]
+  return Math.max(0, item.quantity * conversion)
 }
 
 export function analyzeWeightedRecipe(
@@ -140,7 +197,9 @@ export function analyzeWeightedRecipe(
 
     for (const item of recognized) {
       const ingredient = item.ingredient!
-      const weight = getIngredientWeight(item) / totalWeight
+
+      const weight =
+        getIngredientWeight(item) / totalWeight
 
       for (const key of keys) {
         profile[key] += ingredient.taste[key] * weight
@@ -152,6 +211,10 @@ export function analyzeWeightedRecipe(
   const { strengths, weaknesses } = analyzeBalance(profile)
   const suggestions = generateBalanceSuggestions(profile)
 
+  const confidence = parsed.length === 0
+    ? 0
+    : Math.round((recognized.length / parsed.length) * 100)
+
   return {
     score,
     profile,
@@ -159,5 +222,8 @@ export function analyzeWeightedRecipe(
     weaknesses,
     suggestions,
     unknownIngredients,
+    recognizedIngredients: recognized.length,
+    totalIngredients: parsed.length,
+    confidence,
   }
 }
