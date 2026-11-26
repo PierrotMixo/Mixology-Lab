@@ -1,4 +1,6 @@
 
+import { normalizeIngredientName } from './ingredients'
+
 export type AromaFamilyId =
   | 'agrumes'
   | 'fruits'
@@ -108,9 +110,7 @@ export const aromaFamilies: AromaFamilyDefinition[] = [
       { id: 'clou-girofle', name: 'Clou de girofle', synonyms: ['girofle'], intensity: 5, tags: ['chaud', 'medicinal', 'boise'] },
       { id: 'anis', name: 'Anis', synonyms: ['anis vert'], intensity: 4, tags: ['anise', 'frais', 'reglisse'] }
     ]
-  }
-,
-
+  },
   {
     id: 'boises',
     name: 'Boisés et résineux',
@@ -189,7 +189,26 @@ export const aromaFamilies: AromaFamilyDefinition[] = [
   }
 ]
 
-import { normalizeIngredientName } from './ingredients'
+function createMatch(
+  family: AromaFamilyDefinition,
+  descriptor: AromaDescriptor,
+  confidence: number
+): AromaMatch {
+  return {
+    family: family.id,
+    familyName: family.name,
+    descriptor,
+    confidence,
+  }
+}
+
+function getAllMatches(): AromaMatch[] {
+  return aromaFamilies.flatMap(family =>
+    family.descriptors.map(descriptor =>
+      createMatch(family, descriptor, 1)
+    )
+  )
+}
 
 export function findAroma(query: string): AromaMatch[] {
   const normalized = normalizeIngredientName(query)
@@ -198,55 +217,112 @@ export function findAroma(query: string): AromaMatch[] {
 
   return aromaFamilies.flatMap(family =>
     family.descriptors
-      .filter(descriptor =>
-        normalizeIngredientName(descriptor.name) === normalized ||
-        descriptor.synonyms.some(
-          synonym => normalizeIngredientName(synonym) === normalized
+      .filter(descriptor => {
+        const terms = [
+          descriptor.name,
+          ...descriptor.synonyms,
+        ]
+
+        return terms.some(
+          term => normalizeIngredientName(term) === normalized
+        )
+      })
+      .map(descriptor => createMatch(family, descriptor, 1))
+  )
+}
+
+function calculateSearchConfidence(
+  query: string,
+  terms: string[]
+): number {
+  const normalizedQuery = normalizeIngredientName(query)
+
+  const normalizedTerms = terms.map(normalizeIngredientName)
+
+  if (normalizedTerms.includes(normalizedQuery)) {
+    return 1
+  }
+
+  if (normalizedTerms.some(term =>
+    term.includes(normalizedQuery) ||
+    normalizedQuery.includes(term)
+  )) {
+    return 0.85
+  }
+
+  const queryWords = normalizedQuery.split(/\s+/).filter(Boolean)
+
+  if (queryWords.length === 0) return 0
+
+  const bestOverlap = Math.max(
+    ...normalizedTerms.map(term => {
+      const termWords = term.split(/\s+/).filter(Boolean)
+
+      const matchingWords = queryWords.filter(word =>
+        termWords.some(termWord =>
+          termWord.includes(word) || word.includes(termWord)
         )
       )
-      .map(descriptor => ({
-        family: family.id,
-        familyName: family.name,
-        descriptor,
-        confidence: 1
-      }))
+
+      return matchingWords.length / queryWords.length
+    })
   )
+
+  return bestOverlap >= 0.5 ? bestOverlap * 0.75 : 0
 }
 
 export function searchAromas(query: string): AromaMatch[] {
   const normalized = normalizeIngredientName(query)
 
   if (!normalized) {
-    return aromaFamilies.flatMap(family =>
-      family.descriptors.map(descriptor => ({
-        family: family.id,
-        familyName: family.name,
-        descriptor,
-        confidence: 1
-      }))
-    )
+    return getAllMatches()
   }
 
-  return aromaFamilies.flatMap(family =>
-    family.descriptors
-      .filter(descriptor => {
-        const terms = [
-          descriptor.name,
-          ...descriptor.synonyms,
-          ...descriptor.tags
-        ]
+  const results: AromaMatch[] = []
 
-        return terms.some(term =>
-          normalizeIngredientName(term).includes(normalized)
+  for (const family of aromaFamilies) {
+    for (const descriptor of family.descriptors) {
+      const terms = [
+        descriptor.name,
+        ...descriptor.synonyms,
+        ...descriptor.tags,
+      ]
+
+      const confidence = calculateSearchConfidence(
+        normalized,
+        terms
+      )
+
+      if (confidence >= 0.5) {
+        results.push(
+          createMatch(family, descriptor, confidence)
         )
-      })
-      .map(descriptor => ({
-        family: family.id,
-        familyName: family.name,
-        descriptor,
-        confidence: 0.9
-      }))
+      }
+    }
+  }
+
+  return results.sort(
+    (a, b) => b.confidence - a.confidence
   )
+}
+
+function resolveAroma(value: string): {
+  key: string
+  label: string
+} {
+  const match = findAroma(value)[0]
+
+  if (match) {
+    return {
+      key: match.descriptor.id,
+      label: match.descriptor.name,
+    }
+  }
+
+  return {
+    key: normalizeIngredientName(value),
+    label: value,
+  }
 }
 
 export function compareAromaProfiles(
@@ -258,30 +334,47 @@ export function compareAromaProfiles(
   uniqueToB: string[]
   similarity: number
 } {
-  const normalize = (values: string[]) =>
-    values.map(value => normalizeIngredientName(value))
+  const a = ingredientA.map(resolveAroma)
+  const b = ingredientB.map(resolveAroma)
 
-  const a = normalize(ingredientA)
-  const b = normalize(ingredientB)
+  const keysA = new Set(a.map(item => item.key))
+  const keysB = new Set(b.map(item => item.key))
 
-  const shared = a.filter(value => b.includes(value))
-  const uniqueToA = a.filter(value => !b.includes(value))
-  const uniqueToB = b.filter(value => !a.includes(value))
+  const sharedKeys = new Set(
+    [...keysA].filter(key => keysB.has(key))
+  )
 
-  const total = new Set([...a, ...b]).size
+  const shared = [...new Set(
+    a
+      .filter(item => sharedKeys.has(item.key))
+      .map(item => item.label)
+  )]
+
+  const uniqueToA = [...new Set(
+    a
+      .filter(item => !keysB.has(item.key))
+      .map(item => item.label)
+  )]
+
+  const uniqueToB = [...new Set(
+    b
+      .filter(item => !keysA.has(item.key))
+      .map(item => item.label)
+  )]
+
+  const total = new Set([...keysA, ...keysB]).size
 
   const similarity = total === 0
     ? 0
-    : Math.round((shared.length / total) * 100)
+    : Math.round((sharedKeys.size / total) * 100)
 
   return {
     shared,
     uniqueToA,
     uniqueToB,
-    similarity
+    similarity,
   }
 }
-
 
 export function identifyIngredientAromas(
   aromas: string[]
@@ -289,21 +382,30 @@ export function identifyIngredientAromas(
   const results: AromaMatch[] = []
 
   for (const aroma of aromas) {
-    const matches = findAroma(aroma)
+    const exactMatches = findAroma(aroma)
 
-    if (matches.length > 0) {
-      results.push(...matches)
+    if (exactMatches.length > 0) {
+      results.push(...exactMatches)
       continue
     }
 
-    results.push(...searchAromas(aroma))
+    const approximateMatches = searchAromas(aroma)
+      .filter(match => match.confidence >= 0.75)
+
+    results.push(...approximateMatches)
   }
 
   const unique = new Map<string, AromaMatch>()
 
   for (const match of results) {
-    unique.set(match.descriptor.id, match)
+    const existing = unique.get(match.descriptor.id)
+
+    if (!existing || match.confidence > existing.confidence) {
+      unique.set(match.descriptor.id, match)
+    }
   }
 
-  return Array.from(unique.values())
-}
+  return Array.from(unique.values()).sort(
+    (a, b) => b.confidence - a.confidence
+  )
+                                                                                       }
