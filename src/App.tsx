@@ -35,7 +35,7 @@ export default function App() {
     window.setTimeout(() => setNotice(''), 2200)
   }
   const make = () => {
-    const generated = generateRecipes(kind, profile, strength)
+    const generated = generateRecipes(kind, profile, strength, Date.now(), ingredientText)
     setResults(generated)
     setTab('create')
   }
