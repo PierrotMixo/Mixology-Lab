@@ -1,11 +1,25 @@
 
 import type { Recipe, DrinkType } from './types'
+
 import {
   ingredients,
   findIngredient,
   normalizeIngredientName,
-  type Ingredient
+  type Ingredient,
 } from './engine/ingredients'
+
+import {
+  compareIngredients,
+} from './engine/pairing'
+
+import {
+  compareAromaProfiles,
+  identifyIngredientAromas,
+} from './engine/aromas'
+
+import {
+  analyzeWeightedRecipe,
+} from './engine/recipe-analysis'
 
 type RecipeRole = 'base' | 'modifier' | 'acid' | 'sweet'
 
@@ -19,22 +33,21 @@ const names = [
   'Silent Garden',
   'Velvet Current',
   'Wild Harmony',
-  'Amber Theory'
+  'Amber Theory',
 ]
 
 const profileKeywords: Record<string, string[]> = {
   agrume: ['agrumes', 'citron', 'orange', 'pamplemousse', 'yuzu'],
   agrumes: ['agrumes', 'citron', 'orange', 'pamplemousse', 'yuzu'],
-  herbacé: ['herbes', 'végétal', 'basilic', 'menthe', 'romarin'],
-  herbace: ['herbes', 'végétal', 'basilic', 'menthe', 'romarin'],
-  fruité: ['fruits', 'fruité', 'pomme', 'poire', 'fruits rouges'],
+  herbace: ['herbes', 'vegetal', 'basilic', 'menthe', 'romarin'],
+  fruite: ['fruits', 'pomme', 'poire', 'framboise', 'fruits rouges'],
   floral: ['floral', 'fleurs', 'rose', 'sureau', 'jasmin'],
-  épicé: ['épices', 'gingembre', 'cannelle', 'poivre'],
-  boisé: ['bois', 'vanille', 'chêne', 'fumé'],
-  gourmand: ['caramel', 'chocolat', 'café', 'vanille', 'amande'],
-  sec: ['sec', 'minéral', 'herbes', 'agrumes'],
-  équilibré: [],
-  signature: []
+  epice: ['epices', 'gingembre', 'cannelle', 'poivre'],
+  boise: ['bois', 'vanille', 'chene', 'fume'],
+  gourmand: ['caramel', 'chocolat', 'cafe', 'vanille', 'amande'],
+  sec: ['sec', 'mineral', 'herbes', 'agrumes'],
+  equilibre: [],
+  signature: [],
 }
 
 function includesRole(item: Ingredient, role: string): boolean {
@@ -46,8 +59,21 @@ function isNonAlcoholic(item: Ingredient): boolean {
     'spiritueux',
     'liqueurs',
     'vins_et_apéritifs',
-    'bitters'
+    'bitters',
   ].includes(item.family)
+}
+
+function hasRole(
+  items: Ingredient[],
+  role: string
+): boolean {
+  return items.some(item => includesRole(item, role))
+}
+
+function uniqueIngredients(items: Ingredient[]): Ingredient[] {
+  return Array.from(
+    new Map(items.map(item => [item.id, item])).values()
+  )
 }
 
 function scoreIngredient(
@@ -57,36 +83,46 @@ function scoreIngredient(
 ): number {
   let score = 0
 
-  if (base) {
-    const baseTags = base.pairingTags.map(normalizeIngredientName)
-    const candidateTags = item.pairingTags.map(normalizeIngredientName)
-
-    score += candidateTags.filter(tag =>
-      baseTags.some(baseTag =>
-        baseTag.includes(tag) || tag.includes(baseTag)
-      )
-    ).length * 3
-
-    const sharedAromas = item.aromas.filter(aroma =>
-      base.aromas.some(baseAroma =>
-        normalizeIngredientName(baseAroma) ===
-        normalizeIngredientName(aroma)
-      )
-    )
-
-    score += sharedAromas.length * 2
-  }
-
   const keywords =
     profileKeywords[normalizeIngredientName(profile)] ?? []
 
-  score += item.aromas.filter(aroma =>
-    keywords.some(keyword =>
-      normalizeIngredientName(aroma).includes(
-        normalizeIngredientName(keyword)
+  const normalizedKeywords = keywords.map(normalizeIngredientName)
+
+  const itemAromas = item.aromas.map(normalizeIngredientName)
+
+  const profileMatches = itemAromas.filter(aroma =>
+    normalizedKeywords.some(keyword =>
+      aroma.includes(keyword) || keyword.includes(aroma)
+    )
+  )
+
+  score += profileMatches.length * 4
+
+  const descriptors = identifyIngredientAromas(item.aromas)
+
+  const descriptorMatches = descriptors.filter(match =>
+    normalizedKeywords.some(keyword =>
+      normalizeIngredientName(match.descriptor.name).includes(keyword) ||
+      match.descriptor.tags.some(tag =>
+        normalizeIngredientName(tag).includes(keyword)
       )
     )
-  ).length * 3
+  )
+
+  score += descriptorMatches.length * 3
+
+  if (base && base.id !== item.id) {
+    const pairing = compareIngredients(base, item)
+
+    score += pairing.score * 0.25
+
+    const aromaComparison = compareAromaProfiles(
+      base.aromas,
+      item.aromas
+    )
+
+    score += aromaComparison.similarity * 0.15
+  }
 
   return score
 }
@@ -97,14 +133,24 @@ function rankCandidates(
   profile: string,
   offset: number
 ): Ingredient[] {
-  return [...candidates]
+  const ranked = [...candidates]
     .map(item => ({
       item,
-      score: scoreIngredient(item, base, profile)
+      score: scoreIngredient(item, base, profile),
     }))
     .sort((a, b) => b.score - a.score)
     .map(entry => entry.item)
-    .slice(offset, offset + 8)
+
+  if (ranked.length === 0) return []
+
+  const start = offset % ranked.length
+
+  const rotated = [
+    ...ranked.slice(start),
+    ...ranked.slice(0, start),
+  ]
+
+  return rotated.slice(0, 8)
 }
 
 function choose(
@@ -113,8 +159,12 @@ function choose(
   profile: string,
   offset: number
 ): Ingredient | undefined {
-  const ranked = rankCandidates(candidates, base, profile, offset)
-  return ranked[0] ?? candidates[0]
+  return rankCandidates(
+    candidates,
+    base,
+    profile,
+    offset
+  )[0]
 }
 
 function amountFor(
@@ -147,8 +197,7 @@ function getMethod(items: Ingredient[]): string[] {
   )
 
   const hasBubbles = items.some(item =>
-    item.id === 'tonic' || item.id === 'soda-water' ||
-    item.id === 'ginger-beer'
+    ['tonic', 'soda-water', 'ginger-beer'].includes(item.id)
   )
 
   const hasVermouth = items.some(item =>
@@ -160,7 +209,7 @@ function getMethod(items: Ingredient[]): string[] {
       'Verser les ingrédients dans un verre à mélange.',
       'Ajouter de la glace et remuer pendant 20 à 25 secondes.',
       'Filtrer dans une verrerie préalablement rafraîchie.',
-      'Finaliser avec la garniture.'
+      'Finaliser avec la garniture.',
     ]
   }
 
@@ -185,22 +234,41 @@ function getMethod(items: Ingredient[]): string[] {
     )
   }
 
-  method.push('Finaliser avec la garniture et servir immédiatement.')
+  method.push(
+    'Finaliser avec la garniture et servir immédiatement.'
+  )
 
   return method
 }
 
 function getGlass(items: Ingredient[]): string {
-  if (items.some(item => item.id === 'tonic' || item.id === 'soda-water')) {
+  if (items.some(item =>
+    ['tonic', 'soda-water'].includes(item.id)
+  )) {
     return 'Highball'
   }
 
-  if (items.some(item => item.roles.includes('base') &&
-    item.family === 'spiritueux')) {
+  if (items.some(item =>
+    item.roles.includes('base') &&
+    item.family === 'spiritueux'
+  )) {
     return 'Coupe'
   }
 
   return 'Highball'
+}
+
+function getIngredientRole(
+  item: Ingredient,
+  base: Ingredient | undefined,
+  acid: Ingredient | undefined,
+  sweet: Ingredient | undefined
+): RecipeRole {
+  if (item.id === base?.id) return 'base'
+  if (item.id === acid?.id) return 'acid'
+  if (item.id === sweet?.id) return 'sweet'
+
+  return 'modifier'
 }
 
 function buildRecipe(
@@ -217,6 +285,12 @@ function buildRecipe(
     ? ingredients.filter(isNonAlcoholic)
     : ingredients
 
+  const compatibleRequested = uniqueIngredients(
+    requested.filter(item => pool.some(
+      candidate => candidate.id === item.id
+    ))
+  )
+
   const bases = pool.filter(item =>
     includesRole(item, 'base') &&
     (type === 'mocktail'
@@ -225,61 +299,116 @@ function buildRecipe(
       : item.family === 'spiritueux')
   )
 
-  const base = requested.find(item =>
+  const requestedBase = compatibleRequested.find(item =>
     includesRole(item, 'base') &&
     (type === 'mocktail'
       ? isNonAlcoholic(item)
       : item.family === 'spiritueux')
-  ) ?? choose(bases, undefined, profile, offset)
+  )
+
+  const base = requestedBase ??
+    choose(bases, undefined, profile, offset)
+
+  // Tous les ingrédients demandés sont conservés.
+  const selected: Ingredient[] = uniqueIngredients([
+    ...(base ? [base] : []),
+    ...compatibleRequested,
+  ])
 
   const modifiers = pool.filter(item =>
-    item.id !== base?.id &&
+    !selected.some(selectedItem => selectedItem.id === item.id) &&
     (includesRole(item, 'modificateur') ||
       includesRole(item, 'aromatique')) &&
     !includesRole(item, 'base')
   )
 
   const acids = pool.filter(item =>
-    item.id !== base?.id &&
+    !selected.some(selectedItem => selectedItem.id === item.id) &&
     includesRole(item, 'acidité')
   )
 
   const sweets = pool.filter(item =>
-    item.id !== base?.id &&
+    !selected.some(selectedItem => selectedItem.id === item.id) &&
     includesRole(item, 'sucrant')
   )
 
-  const modifier = requested.find(item =>
-    item.id !== base?.id &&
-    (includesRole(item, 'modificateur') ||
-      includesRole(item, 'aromatique')) &&
-    !includesRole(item, 'base')
-  ) ?? choose(modifiers, base, profile, offset + 1)
+  const acid = hasRole(selected, 'acidité')
+    ? selected.find(item => includesRole(item, 'acidité'))
+    : choose(acids, base, profile, offset + 2)
 
-  const acid = requested.find(item =>
-    item.id !== base?.id && includesRole(item, 'acidité')
-  ) ?? choose(acids, base, profile, offset + 2)
+  if (acid && !selected.some(item => item.id === acid.id)) {
+    selected.push(acid)
+  }
 
-  const sweet = requested.find(item =>
-    item.id !== base?.id && includesRole(item, 'sucrant')
-  ) ?? choose(sweets, base, profile, offset + 3)
+  const sweet = hasRole(selected, 'sucrant')
+    ? selected.find(item => includesRole(item, 'sucrant'))
+    : choose(sweets, base, profile, offset + 3)
 
-  const selected = [base, modifier, acid, sweet].filter(
-    (item): item is Ingredient => Boolean(item)
-  )
+  if (sweet && !selected.some(item => item.id === sweet.id)) {
+    selected.push(sweet)
+  }
 
-  const recipeIngredients = selected.map(item => {
-    let role: RecipeRole = 'modifier'
+  if (
+    !hasRole(selected, 'modificateur') &&
+    !hasRole(selected, 'aromatique')
+  ) {
+    const modifier = choose(
+      modifiers,
+      base,
+      profile,
+      offset + 1
+    )
 
-    if (item.id === base?.id) role = 'base'
-    else if (item.id === acid?.id) role = 'acid'
-    else if (item.id === sweet?.id) role = 'sweet'
+    if (modifier) selected.push(modifier)
+  }
+
+  const finalIngredients = uniqueIngredients(selected)
+
+  const recipeIngredients = finalIngredients.map(item => {
+    const role = getIngredientRole(item, base, acid, sweet)
 
     return {
       name: item.name,
-      amount: amountFor(item, role, strength)
+      amount: amountFor(item, role, strength),
     }
   })
+
+  // Analyse sensorielle pondérée par les quantités.
+  const balance = analyzeWeightedRecipe(recipeIngredients)
+
+  // Identification des familles aromatiques.
+  const aromas = [
+    ...new Set(finalIngredients.flatMap(item => item.aromas)),
+  ]
+
+  const aromaMatches = identifyIngredientAromas(aromas)
+
+  const aromaFamilies = [
+    ...new Set(aromaMatches.map(match => match.familyName)),
+  ]
+
+  // Comparaison des associations entre chaque paire.
+  const pairings = []
+
+  for (let i = 0; i < finalIngredients.length; i++) {
+    for (let j = i + 1; j < finalIngredients.length; j++) {
+      pairings.push(
+        compareIngredients(
+          finalIngredients[i],
+          finalIngredients[j]
+        )
+      )
+    }
+  }
+
+  const strongestPairings = pairings
+    .filter(pairing => pairing.score >= 45)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3)
+
+  const pairingNotes = strongestPairings.map(pairing =>
+    `${pairing.ingredientA} / ${pairing.ingredientB} : ${pairing.explanation}`
+  )
 
   const actualStrength = type === 'mocktail'
     ? 'Sans alcool'
@@ -289,33 +418,46 @@ function buildRecipe(
         ? 'Léger'
         : 'Équilibré'
 
-  const aromas = [...new Set(
-    selected.flatMap(item => item.aromas)
-  )]
-
-  const pairingNotes = selected
+  const ingredientNotes = finalIngredients
     .map(item => item.notes)
     .filter(Boolean)
+
+  const balanceNotes = balance.suggestions.length > 0
+    ? balance.suggestions.join(' ')
+    : 'Profil sensoriel à confirmer par dégustation.'
+
+  const notes =
+    `Analyse Mixology Lab. ` +
+    `Équilibre sensoriel : ${balance.score}/100. ` +
+    `Fiabilité de reconnaissance : ${balance.confidence}%. ` +
+    `Arômes détectés : ${aromas.join(', ')}. ` +
+    `Familles aromatiques : ${aromaFamilies.join(', ')}. ` +
+    `Associations : ${pairingNotes.join(' ')} ` +
+    `Analyse gustative : ${balance.strengths.join(', ')}. ` +
+    `Points de vigilance : ${balance.weaknesses.join(', ')}. ` +
+    `Suggestions : ${balanceNotes} ` +
+    `Repères ingrédients : ${ingredientNotes.join(' ')} ` +
+    `Les dosages sont des propositions de départ à valider par dégustation.`
 
   return {
     id: `lab-${seed}-${index}`,
     name: names[(seed + index) % names.length],
     type,
     category: 'Création assistée par le moteur aromatique',
-    profile: [profile, ...aromas.slice(0, 2)],
+    profile: [
+      profile,
+      ...aromaFamilies.slice(0, 3),
+      ...aromas.slice(0, 2),
+    ],
     strength: actualStrength,
     ingredients: recipeIngredients,
-    method: getMethod(selected),
-    glass: getGlass(selected),
-    garnish: selected.find(item =>
+    method: getMethod(finalIngredients),
+    glass: getGlass(finalIngredients),
+    garnish: finalIngredients.find(item =>
       item.roles.includes('garniture')
     )?.name ?? 'Garniture à définir selon la dégustation',
-    notes:
-      `Association construite à partir de la base aromatique Mixology Lab. ` +
-      `Arômes détectés : ${aromas.join(', ')}. ` +
-      `Repères ingrédients : ${pairingNotes.join(' ')} ` +
-      `Les dosages sont des propositions de départ à valider par dégustation.`,
-    original: true
+    notes,
+    original: true,
   }
 }
 
@@ -336,6 +478,9 @@ export function generateRecipes(
     .filter(Boolean)
     .map(value => findIngredient(value))
     .filter((item): item is Ingredient => Boolean(item))
+    .filter(item =>
+      actualType === 'mocktail' ? isNonAlcoholic(item) : true
+    )
 
   return Array.from({ length: 5 }, (_, index) =>
     buildRecipe(
@@ -348,4 +493,3 @@ export function generateRecipes(
     )
   )
 }
-  
