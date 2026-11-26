@@ -4,10 +4,6 @@ import {
   type Ingredient,
 } from './ingredients'
 
-import {
-  findAroma,
-} from './aromas'
-
 export type PairingType =
   | 'complementarity'
   | 'contrast'
@@ -37,63 +33,6 @@ function clamp(value: number, min = 0, max = 100): number {
   return Math.max(min, Math.min(max, value))
 }
 
-
-function getAromaAffinity(
-  ingredientA: Ingredient,
-  ingredientB: Ingredient
-): number {
-  const aromasA = ingredientA.aromas.map(aroma => aroma.toLowerCase())
-  const aromasB = ingredientB.aromas.map(aroma => aroma.toLowerCase())
-
-  const shared = aromasA.filter(aroma => aromasB.includes(aroma))
-
-  const familyA = unique(
-    aromasA.flatMap(aroma =>
-      findAroma(aroma).map(match => match.family)
-    )
-  )
-
-  const familyB = unique(
-    aromasB.flatMap(aroma =>
-      findAroma(aroma).map(match => match.family)
-    )
-  )
-
-  const sharedFamilies = familyA.filter(family =>
-    familyB.includes(family)
-  )
-
-  return Math.min(
-    30,
-    shared.length * 10 + sharedFamilies.length * 5
-  )
-}
-
-  const aromasA = ingredientA.aromas.map(aroma => aroma.toLowerCase())
-  const aromasB = ingredientB.aromas.map(aroma => aroma.toLowerCase())
-
-  const shared = aromasA.filter(aroma => aromasB.includes(aroma))
-
-  const familyA = unique(
-    aromasA
-      .map(aroma => findAroma(aroma)?.family)
-      .filter((family): family is NonNullable<typeof family> => Boolean(family))
-  )
-
-  const familyB = unique(
-    aromasB
-      .map(aroma => findAroma(aroma)?.family)
-      .filter((family): family is NonNullable<typeof family> => Boolean(family))
-  )
-
-  const sharedFamilies = familyA.filter(family => familyB.includes(family))
-
-  return Math.min(
-    30,
-    shared.length * 10 + sharedFamilies.length * 5
-  )
-}
-
 function getTasteComplementarity(
   ingredientA: Ingredient,
   ingredientB: Ingredient
@@ -103,18 +42,14 @@ function getTasteComplementarity(
 
   let score = 0
 
-  // L'acidité peut équilibrer une forte sucrosité.
   if (a.acidity >= 3 && b.sweetness >= 3) score += 12
   if (b.acidity >= 3 && a.sweetness >= 3) score += 12
 
-  // L'amertume peut être adoucie par la sucrosité.
   if (a.bitterness >= 3 && b.sweetness >= 2) score += 8
   if (b.bitterness >= 3 && a.sweetness >= 2) score += 8
 
-  // Une différence de corps peut apporter de la structure.
   if (Math.abs(a.body - b.body) >= 2) score += 5
 
-  // Une intensité très élevée peut dominer un ingrédient délicat.
   const intensityDifference = Math.abs(a.intensity - b.intensity)
 
   if (intensityDifference <= 1) score += 5
@@ -159,7 +94,6 @@ export function compareIngredients(
     )
   )
 
-  const aromaScore = getAromaAffinity(ingredientA, ingredientB)
   const tasteScore = getTasteComplementarity(ingredientA, ingredientB)
   const contrastScore = getContrastScore(ingredientA, ingredientB)
 
@@ -168,7 +102,7 @@ export function compareIngredients(
 
   const type: PairingType[] = []
 
-  if (sharedAromas.length > 0 || aromaScore > 0) {
+  if (sharedAromas.length > 0) {
     type.push('shared_aromas')
   }
 
@@ -183,7 +117,7 @@ export function compareIngredients(
   const score = clamp(
     Math.round(
       25 +
-      aromaScore +
+      sharedAromas.length * 12 +
       sharedTags.length * 5 +
       tasteScore +
       contrastScore
@@ -206,13 +140,13 @@ export function compareIngredients(
 
   if (contrast) {
     explanationParts.push(
-      'Le contraste peut apporter du relief à l’association.'
+      'Le contraste peut apporter du relief à cette association.'
     )
   }
 
   if (explanationParts.length === 0) {
     explanationParts.push(
-      'Aucune affinité forte n’a été identifiée dans la base actuelle. Une dégustation permettra de valider cette association.'
+      'Aucune affinité forte identifiée dans la base actuelle. Une dégustation permettra de valider cette association.'
     )
   }
 
@@ -251,7 +185,7 @@ export function suggestPairings(
 
       if (comparison.sharedTags.length > 0) {
         reasons.push(
-          `Affinités : ${comparison.sharedTags.join(', ')}`
+          `Affinités gustatives : ${comparison.sharedTags.join(', ')}`
         )
       }
 
