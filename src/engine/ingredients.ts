@@ -237,12 +237,7 @@ export const ingredients: Ingredient[] = [
     taste: { acidity: 0, sweetness: 1, bitterness: 1, body: 4, intensity: 4 },
     pairingTags: ['orange', 'chocolat', 'vanille', 'café', 'noix'],
     notes: 'Eau-de-vie de vin. Les profils évoluent avec le cru et le vieillissement.'
-  },
-
-  // LIQUEURS ET MODIFICATEURS
-  {
-  // EXTENSION SPIRITUEUX - LOT 1
-  {
+  }
   // EXTENSION SPIRITUEUX - LOT 2
   {
     id: 'irish-whiskey',
@@ -316,7 +311,7 @@ export const ingredients: Ingredient[] = [
     pairingTags: ['pomme', 'malt', 'épices', 'agrumes', 'herbes'],
     notes: 'Eau-de-vie traditionnelle des Pays-Bas et de Belgique, souvent plus maltée et ronde qu’un gin classique.'
   },
-  
+  {
     id: 'aged-agricultural-rum',
     name: 'Rhum agricole vieux',
     aliases: ['Rhum vieux agricole', 'Rhum vieux de Martinique'],
@@ -549,7 +544,7 @@ export const ingredients: Ingredient[] = [
     pairingTags: ['poire', 'pomme', 'vanille', 'amande', 'chocolat blanc'],
     notes: 'Eau-de-vie de poire très expressive, généralement sèche malgré ses arômes naturellement fruités.'
   },
-
+    {
     id: 'triple-sec',
     name: 'Triple sec',
     aliases: ['Liqueur d’orange', 'Curaçao sec'],
