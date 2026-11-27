@@ -12,6 +12,20 @@ export type IngredientFamily =
   | 'boissons_sans_alcool'
   | 'produits_laitiers'
 
+export type IngredientForm =
+  | 'whole'
+  | 'fresh'
+  | 'juice'
+  | 'zest'
+  | 'puree'
+  | 'syrup'
+  | 'infusion'
+  | 'dried'
+  | 'ground'
+  | 'carbonated'
+  | 'fermented'
+  | 'concentrate'
+
 export type IngredientRole =
   | 'base'
   | 'modificateur'
@@ -29,6 +43,7 @@ export type Ingredient = {
   aliases: string[]
   family: IngredientFamily
   subfamily: string
+forms?: IngredientForm[] la
   roles: IngredientRole[]
   aromas: string[]
   taste: {
@@ -95,7 +110,7 @@ export const ingredients: Ingredient[] = [
   {
     id: 'tequila-blanco',
     name: 'Tequila blanco',
-    aliases: ['Tequila plata', 'Silver tequila'],
+    aliases: ['Tequila silver 100% agave'],
     family: 'spiritueux',
     subfamily: 'Tequila',
     roles: ['base'],
