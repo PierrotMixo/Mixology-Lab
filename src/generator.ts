@@ -637,7 +637,7 @@ export function generateRecipes(
       strength,
       seed,
       index,
-      requested
+      requested,
       usedAcrossBatch
     )
   )
