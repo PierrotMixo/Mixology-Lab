@@ -130,41 +130,61 @@ function scoreIngredient(
 function rankCandidates(
   candidates: Ingredient[],
   base: Ingredient | undefined,
-  profile: string,
-  offset: number
-): Ingredient[] {
-  const ranked = [...candidates]
+  profile: string
+): { item: Ingredient; score: number }[] {
+  return candidates
     .map(item => ({
       item,
       score: scoreIngredient(item, base, profile),
     }))
     .sort((a, b) => b.score - a.score)
-    .map(entry => entry.item)
-
-  if (ranked.length === 0) return []
-
-  const start = offset % ranked.length
-
-  const rotated = [
-    ...ranked.slice(start),
-    ...ranked.slice(0, start),
-  ]
-
-  return rotated.slice(0, 8)
 }
 
 function choose(
   candidates: Ingredient[],
   base: Ingredient | undefined,
   profile: string,
-  offset: number
+  excludedIds: Set<string> = new Set()
 ): Ingredient | undefined {
-  return rankCandidates(
-    candidates,
+  const available = rankCandidates(
+    candidates.filter(item => !excludedIds.has(item.id)),
     base,
-    profile,
-    offset
-  )[0]
+    profile
+  )
+
+  if (available.length === 0) return undefined
+
+  // Conserver les candidats les plus pertinents.
+  const topCandidates = available.slice(
+    0,
+    Math.min(available.length, 8)
+  )
+
+  // Sélection pondérée : les meilleurs restent favorisés,
+  // mais les autres peuvent également être sélectionnés.
+  const weights = topCandidates.map((candidate, index) => {
+    const positionWeight = 1 / Math.pow(index + 1, 1.5)
+    const qualityWeight = Math.max(0.25, candidate.score + 1)
+
+    return positionWeight * qualityWeight
+  })
+
+  const totalWeight = weights.reduce(
+    (total, weight) => total + weight,
+    0
+  )
+
+  let random = Math.random() * totalWeight
+
+  for (let i = 0; i < topCandidates.length; i++) {
+    random -= weights[i]
+
+    if (random <= 0) {
+      return topCandidates[i].item
+    }
+  }
+
+  return topCandidates[0].item
 }
 
 function amountFor(
