@@ -34,11 +34,19 @@ export default function App() {
     setNotice(next.some(r => r.id === recipe.id) ? 'Recette ajoutée aux favoris' : 'Recette retirée des favoris')
     window.setTimeout(() => setNotice(''), 2200)
   }
-  const make = () => {
-    const generated = generateRecipes(kind, profile, strength)
-    setResults(generated)
-    setTab('create')
-  }
+  
+const make = () => {
+  const generated = generateRecipes(
+    kind,
+    profile,
+    strength,
+    Date.now(),
+    ingredientText
+  )
+
+  setResults(generated)
+  setTab('create')
+}
   const library = useMemo(() => classics.filter(r => (r.name+' '+r.category+' '+r.profile.join(' ')).toLowerCase().includes(search.toLowerCase())), [search])
   const addBarItem = () => {
     if (!barForm.name.trim()) { setNotice('Indique au minimum le nom du produit'); return }
