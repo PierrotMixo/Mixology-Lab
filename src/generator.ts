@@ -8,18 +8,14 @@ import {
   type Ingredient,
 } from './engine/ingredients'
 
-import {
-  compareIngredients,
-} from './engine/pairing'
+import { compareIngredients } from './engine/pairing'
 
 import {
   compareAromaProfiles,
   identifyIngredientAromas,
 } from './engine/aromas'
 
-import {
-  analyzeWeightedRecipe,
-} from './engine/recipe-analysis'
+import { analyzeWeightedRecipe } from './engine/recipe-analysis'
 
 type RecipeRole = 'base' | 'modifier' | 'acid' | 'sweet'
 
@@ -63,10 +59,7 @@ function isNonAlcoholic(item: Ingredient): boolean {
   ].includes(item.family)
 }
 
-function hasRole(
-  items: Ingredient[],
-  role: string
-): boolean {
+function hasRole(items: Ingredient[], role: string): boolean {
   return items.some(item => includesRole(item, role))
 }
 
@@ -87,7 +80,6 @@ function scoreIngredient(
     profileKeywords[normalizeIngredientName(profile)] ?? []
 
   const normalizedKeywords = keywords.map(normalizeIngredientName)
-
   const itemAromas = item.aromas.map(normalizeIngredientName)
 
   const profileMatches = itemAromas.filter(aroma =>
@@ -113,7 +105,6 @@ function scoreIngredient(
 
   if (base && base.id !== item.id) {
     const pairing = compareIngredients(base, item)
-
     score += pairing.score * 0.25
 
     const aromaComparison = compareAromaProfiles(
@@ -302,9 +293,9 @@ function buildRecipe(
     : ingredients
 
   const compatibleRequested = uniqueIngredients(
-    requested.filter(item => pool.some(
-      candidate => candidate.id === item.id
-    ))
+    requested.filter(item =>
+      pool.some(candidate => candidate.id === item.id)
+    )
   )
 
   const bases = pool.filter(item =>
@@ -325,7 +316,6 @@ function buildRecipe(
   const base = requestedBase ??
     choose(bases, undefined, profile, usedAcrossBatch)
 
-  // Les ingrédients explicitement demandés sont conservés.
   const selected: Ingredient[] = uniqueIngredients([
     ...(base ? [base] : []),
     ...compatibleRequested,
@@ -399,7 +389,6 @@ function buildRecipe(
 
   const finalIngredients = uniqueIngredients(selected)
 
-  // Les ingrédients générés sont réservés pour les recettes suivantes.
   const requestedIds = new Set(
     compatibleRequested.map(item => item.id)
   )
@@ -419,10 +408,8 @@ function buildRecipe(
     }
   })
 
-  // Analyse sensorielle pondérée par les quantités.
   const balance = analyzeWeightedRecipe(recipeIngredients)
 
-  // Identification des familles aromatiques.
   const aromas = [
     ...new Set(finalIngredients.flatMap(item => item.aromas)),
   ]
@@ -433,7 +420,6 @@ function buildRecipe(
     ...new Set(aromaMatches.map(match => match.familyName)),
   ]
 
-  // Comparaison des associations entre chaque paire.
   const pairings = []
 
   for (let i = 0; i < finalIngredients.length; i++) {
@@ -505,109 +491,7 @@ function buildRecipe(
     notes,
     original: true,
   }
-}
-
-export function generateRecipes(
-  type: DrinkType | 'surprise',
-  profile: string,
-  strength: string,
-  seed = Date.now(),
-  requestedIngredients = ''
-): Recipe[] {
-  const actualType: DrinkType = type === 'surprise'
-    ? seed % 2 === 0 ? 'cocktail' : 'mocktail'
-    : type
-
-  const requested = requestedIngredients
-    .split(/[,;\n]+/)
-    .map(value => value.trim())
-    .filter(Boolean)
-    .map(value => findIngredient(value))
-    .filter((item): item is Ingredient => Boolean(item))
-    .filter(item =>
-      actualType === 'mocktail' ? isNonAlcoholic(item) : true
-    )
-
-  // Mémoire des ingrédients utilisés dans les cinq propositions.
-  const usedAcrossBatch = new Set<string>()
-
-  return Array.from({ length: 5 }, (_, index) =>
-    buildRecipe(
-      actualType,
-      profile,
-      strength,
-      seed,
-      index,
-      requested,
-      usedAcrossBatch
-    )
-  )
-}
-]
-        )
-      )
     }
-  }
-
-  const strongestPairings = pairings
-    .filter(pairing => pairing.score >= 45)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 3)
-
-  const pairingNotes = strongestPairings.map(pairing =>
-    `${pairing.ingredientA} / ${pairing.ingredientB} : ${pairing.explanation}`
-  )
-
-  const actualStrength = type === 'mocktail'
-    ? 'Sans alcool'
-    : strength === 'strong'
-      ? 'Puissant'
-      : strength === 'light'
-        ? 'Léger'
-        : 'Équilibré'
-
-  const ingredientNotes = finalIngredients
-    .map(item => item.notes)
-    .filter(Boolean)
-
-  const balanceNotes = balance.suggestions.length > 0
-    ? balance.suggestions.join(' ')
-    : 'Profil sensoriel à confirmer par dégustation.'
-
-  const notes =
-    `Analyse Mixology Lab. ` +
-    `Équilibre sensoriel : ${balance.score}/100. ` +
-    `Fiabilité de reconnaissance : ${balance.confidence}%. ` +
-    `Arômes détectés : ${aromas.join(', ')}. ` +
-    `Familles aromatiques : ${aromaFamilies.join(', ')}. ` +
-    `Associations : ${pairingNotes.join(' ')} ` +
-    `Analyse gustative : ${balance.strengths.join(', ')}. ` +
-    `Points de vigilance : ${balance.weaknesses.join(', ')}. ` +
-    `Suggestions : ${balanceNotes} ` +
-    `Repères ingrédients : ${ingredientNotes.join(' ')} ` +
-    `Les dosages sont des propositions de départ à valider par dégustation.`
-
-  return {
-    id: `lab-${seed}-${index}`,
-    name: names[(seed + index) % names.length],
-    type,
-    category: 'Création assistée par le moteur aromatique',
-    profile: [
-      profile,
-      ...aromaFamilies.slice(0, 3),
-      ...aromas.slice(0, 2),
-    ],
-    strength: actualStrength,
-    ingredients: recipeIngredients,
-    method: getMethod(finalIngredients),
-    glass: getGlass(finalIngredients),
-    garnish: finalIngredients.find(item =>
-      item.roles.includes('garniture')
-    )?.name ?? 'Garniture à définir selon la dégustation',
-    notes,
-    original: true,
-  }
-}
 
 export function generateRecipes(
   type: DrinkType | 'surprise',
@@ -629,6 +513,8 @@ export function generateRecipes(
     .filter(item =>
       actualType === 'mocktail' ? isNonAlcoholic(item) : true
     )
+
+  const usedAcrossBatch = new Set<string>()
 
   return Array.from({ length: 5 }, (_, index) =>
     buildRecipe(
