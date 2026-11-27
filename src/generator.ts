@@ -154,17 +154,14 @@ function choose(
 
   if (available.length === 0) return undefined
 
-  // Conserver les candidats les plus pertinents.
   const topCandidates = available.slice(
     0,
     Math.min(available.length, 8)
   )
 
-  // Sélection pondérée : les meilleurs restent favorisés,
-  // mais les autres peuvent également être sélectionnés.
   const weights = topCandidates.map((candidate, index) => {
     const positionWeight = 1 / Math.pow(index + 1, 1.5)
-    const qualityWeight = Math.max(0.25, candidate.score + 1)
+    const qualityWeight = Math.max(0.25, 1 + candidate.score / 20)
 
     return positionWeight * qualityWeight
   })
@@ -297,10 +294,9 @@ function buildRecipe(
   strength: string,
   seed: number,
   index: number,
-  requested: Ingredient[]
+  requested: Ingredient[],
+  usedAcrossBatch: Set<string>
 ): Recipe {
-  const offset = (seed + index * 3) % 8
-
   const pool = type === 'mocktail'
     ? ingredients.filter(isNonAlcoholic)
     : ingredients
@@ -327,9 +323,9 @@ function buildRecipe(
   )
 
   const base = requestedBase ??
-    choose(bases, undefined, profile, offset)
+    choose(bases, undefined, profile, usedAcrossBatch)
 
-  // Tous les ingrédients demandés sont conservés.
+  // Les ingrédients explicitement demandés sont conservés.
   const selected: Ingredient[] = uniqueIngredients([
     ...(base ? [base] : []),
     ...compatibleRequested,
@@ -354,7 +350,15 @@ function buildRecipe(
 
   const acid = hasRole(selected, 'acidité')
     ? selected.find(item => includesRole(item, 'acidité'))
-    : choose(acids, base, profile, offset + 2)
+    : choose(
+        acids,
+        base,
+        profile,
+        new Set([
+          ...usedAcrossBatch,
+          ...selected.map(item => item.id),
+        ])
+      )
 
   if (acid && !selected.some(item => item.id === acid.id)) {
     selected.push(acid)
@@ -362,7 +366,15 @@ function buildRecipe(
 
   const sweet = hasRole(selected, 'sucrant')
     ? selected.find(item => includesRole(item, 'sucrant'))
-    : choose(sweets, base, profile, offset + 3)
+    : choose(
+        sweets,
+        base,
+        profile,
+        new Set([
+          ...usedAcrossBatch,
+          ...selected.map(item => item.id),
+        ])
+      )
 
   if (sweet && !selected.some(item => item.id === sweet.id)) {
     selected.push(sweet)
@@ -376,13 +388,27 @@ function buildRecipe(
       modifiers,
       base,
       profile,
-      offset + 1
+      new Set([
+        ...usedAcrossBatch,
+        ...selected.map(item => item.id),
+      ])
     )
 
     if (modifier) selected.push(modifier)
   }
 
   const finalIngredients = uniqueIngredients(selected)
+
+  // Les ingrédients générés sont réservés pour les recettes suivantes.
+  const requestedIds = new Set(
+    compatibleRequested.map(item => item.id)
+  )
+
+  finalIngredients.forEach(item => {
+    if (!requestedIds.has(item.id)) {
+      usedAcrossBatch.add(item.id)
+    }
+  })
 
   const recipeIngredients = finalIngredients.map(item => {
     const role = getIngredientRole(item, base, acid, sweet)
@@ -502,6 +528,108 @@ export function generateRecipes(
       actualType === 'mocktail' ? isNonAlcoholic(item) : true
     )
 
+  // Mémoire des ingrédients utilisés dans les cinq propositions.
+  const usedAcrossBatch = new Set<string>()
+
+  return Array.from({ length: 5 }, (_, index) =>
+    buildRecipe(
+      actualType,
+      profile,
+      strength,
+      seed,
+      index,
+      requested,
+      usedAcrossBatch
+    )
+  )
+}
+]
+        )
+      )
+    }
+  }
+
+  const strongestPairings = pairings
+    .filter(pairing => pairing.score >= 45)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3)
+
+  const pairingNotes = strongestPairings.map(pairing =>
+    `${pairing.ingredientA} / ${pairing.ingredientB} : ${pairing.explanation}`
+  )
+
+  const actualStrength = type === 'mocktail'
+    ? 'Sans alcool'
+    : strength === 'strong'
+      ? 'Puissant'
+      : strength === 'light'
+        ? 'Léger'
+        : 'Équilibré'
+
+  const ingredientNotes = finalIngredients
+    .map(item => item.notes)
+    .filter(Boolean)
+
+  const balanceNotes = balance.suggestions.length > 0
+    ? balance.suggestions.join(' ')
+    : 'Profil sensoriel à confirmer par dégustation.'
+
+  const notes =
+    `Analyse Mixology Lab. ` +
+    `Équilibre sensoriel : ${balance.score}/100. ` +
+    `Fiabilité de reconnaissance : ${balance.confidence}%. ` +
+    `Arômes détectés : ${aromas.join(', ')}. ` +
+    `Familles aromatiques : ${aromaFamilies.join(', ')}. ` +
+    `Associations : ${pairingNotes.join(' ')} ` +
+    `Analyse gustative : ${balance.strengths.join(', ')}. ` +
+    `Points de vigilance : ${balance.weaknesses.join(', ')}. ` +
+    `Suggestions : ${balanceNotes} ` +
+    `Repères ingrédients : ${ingredientNotes.join(' ')} ` +
+    `Les dosages sont des propositions de départ à valider par dégustation.`
+
+  return {
+    id: `lab-${seed}-${index}`,
+    name: names[(seed + index) % names.length],
+    type,
+    category: 'Création assistée par le moteur aromatique',
+    profile: [
+      profile,
+      ...aromaFamilies.slice(0, 3),
+      ...aromas.slice(0, 2),
+    ],
+    strength: actualStrength,
+    ingredients: recipeIngredients,
+    method: getMethod(finalIngredients),
+    glass: getGlass(finalIngredients),
+    garnish: finalIngredients.find(item =>
+      item.roles.includes('garniture')
+    )?.name ?? 'Garniture à définir selon la dégustation',
+    notes,
+    original: true,
+  }
+}
+
+export function generateRecipes(
+  type: DrinkType | 'surprise',
+  profile: string,
+  strength: string,
+  seed = Date.now(),
+  requestedIngredients = ''
+): Recipe[] {
+  const actualType: DrinkType = type === 'surprise'
+    ? seed % 2 === 0 ? 'cocktail' : 'mocktail'
+    : type
+
+  const requested = requestedIngredients
+    .split(/[,;\n]+/)
+    .map(value => value.trim())
+    .filter(Boolean)
+    .map(value => findIngredient(value))
+    .filter((item): item is Ingredient => Boolean(item))
+    .filter(item =>
+      actualType === 'mocktail' ? isNonAlcoholic(item) : true
+    )
+
   return Array.from({ length: 5 }, (_, index) =>
     buildRecipe(
       actualType,
@@ -510,6 +638,7 @@ export function generateRecipes(
       seed,
       index,
       requested
+      usedAcrossBatch
     )
   )
 }
