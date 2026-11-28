@@ -43,7 +43,7 @@ export type Ingredient = {
   aliases: string[]
   family: IngredientFamily
   subfamily: string
-forms?: IngredientForm[] la
+  forms?: IngredientForm[]
   roles: IngredientRole[]
   aromas: string[]
   taste: {
@@ -110,7 +110,7 @@ export const ingredients: Ingredient[] = [
   {
     id: 'tequila-blanco',
     name: 'Tequila blanco',
-    aliases: ['Tequila silver 100% agave'],
+    aliases: ['Tequila plata'],
     family: 'spiritueux',
     subfamily: 'Tequila',
     roles: ['base'],
@@ -159,7 +159,7 @@ export const ingredients: Ingredient[] = [
   {
     id: 'tequila-blanco-premium',
     name: 'Tequila Blanco 100 % agave',
-    aliases: ['Tequila plata', 'Tequila silver 100% agave'],
+    aliases: ['Tequila silver 100% agave'],
     family: 'spiritueux',
     subfamily: 'Tequila',
     roles: ['base', 'aromatique'],
